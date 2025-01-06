@@ -1,0 +1,70 @@
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using ModEndpoints;
+using ModEndpoints.Core;
+using ModResults;
+using ModularMonolith.Modules.FirstService.FeatureContracts.Features;
+using ModularMonolith.Modules.FirstService.Features.Books.Configuration;
+using ModularMonolith.Modules.FirstService.Features.Books.Orleans;
+using ModularMonolith.Shared.Guids;
+using ModularMonolith.Shared.Orleans;
+
+namespace ModularMonolith.Modules.FirstService.Features.Books;
+
+internal record CreateBookRequest([FromBody] CreateBookRequestBody Body);
+
+internal class CreateBookRequestValidator : AbstractValidator<CreateBookRequest>
+{
+  public CreateBookRequestValidator()
+  {
+    RuleFor(x => x.Body.Title).NotEmpty();
+    RuleFor(x => x.Body.Author).NotEmpty();
+    RuleFor(x => x.Body.Price).GreaterThan(0);
+  }
+}
+
+[RouteGroupMember(typeof(BooksV1RouteGroup))]
+internal class CreateBook(IGrainFactory grainFactory, ILocationStore location)
+  : WebResultEndpoint<CreateBookRequest, CreateBookResponse>
+{
+  private const string Pattern = "/";
+
+  protected override void Configure(
+    IServiceProvider serviceProvider,
+    IRouteGroupConfigurator? parentRouteGroup)
+  {
+    MapPost(Pattern)
+      .Produces<CreateBookResponse>(StatusCodes.Status201Created);
+  }
+  protected override async Task<Result<CreateBookResponse>> HandleAsync(
+    CreateBookRequest req,
+    CancellationToken ct)
+  {
+    var book = new BookGrainState(
+      Title: req.Body.Title,
+      Author: req.Body.Author,
+      Price: req.Body.Price);
+
+    var id = GuidV7.CreateVersion7();
+
+    using (var gcts = new GrainCancellationTokenSource())
+    {
+      using (gcts.Link(ct))
+      {
+        var result = await grainFactory.GetGrain<IBookGrain>(id).CreateBookAsync(book, gcts.Token);
+        return await result.ToResultAsync(
+          async (id, state, ct) =>
+          {
+            await state.Location.SetValueAsync(
+              typeof(GetBookById).FullName,
+              new { id = id },
+              ct);
+            return new CreateBookResponse(id);
+          },
+          new { Location = location },
+          ct);
+      }
+    }
+  }
+}

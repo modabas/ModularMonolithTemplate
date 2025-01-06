@@ -1,0 +1,3 @@
+
+#from Host project folder
+dotnet ef migrations add Init -c SecondServiceDbContext -p ..\..\Modules\SecondService\ModularMonolith.Modules.SecondService\ModularMonolith.Modules.SecondService.csproj -s .\ModularMonolith.Hosts.Api.csproj -o Data/Migrations
