@@ -41,7 +41,7 @@ internal class CreateBook(IGrainFactory grainFactory, ILocationStore location)
     CreateBookRequest req,
     CancellationToken ct)
   {
-    var book = new BookGrainState(
+    var book = new BookEntitySurrogate(
       Title: req.Body.Title,
       Author: req.Body.Author,
       Price: req.Body.Price);

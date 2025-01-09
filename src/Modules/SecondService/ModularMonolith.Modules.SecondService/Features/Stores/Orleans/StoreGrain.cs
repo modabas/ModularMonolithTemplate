@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using ModResults;
+using ModularMonolith.Modules.FirstService.IntegrationContracts.Integrations.Books;
 using ModularMonolith.Modules.SecondService.Data;
 using ModularMonolith.Modules.SecondService.IntegrationContracts.Integrations.Stores;
 using ModularMonolith.Shared.Data.SimpleOutbox.Extensions;
@@ -11,9 +12,9 @@ namespace ModularMonolith.Modules.SecondService.Features.Stores.Orleans;
 
 internal class StoreGrain : BaseGrain, IStoreGrain
 {
-  private StoreGrainState? _state;
+  private StoreEntitySurrogate? _cache;
 
-  public async Task<Result<Guid>> CreateStoreAsync(StoreGrainState store, GrainCancellationToken gct)
+  public async Task<Result<Guid>> CreateStoreAsync(StoreEntitySurrogate store, GrainCancellationToken gct)
   {
     var id = this.GetPrimaryKey();
     var ct = gct.CancellationToken;
@@ -24,7 +25,7 @@ internal class StoreGrain : BaseGrain, IStoreGrain
     await db.SaveChangesAsync(ct);
 
     //set in-memory
-    _state = store;
+    _cache = store;
 
     return id;
   }
@@ -35,46 +36,51 @@ internal class StoreGrain : BaseGrain, IStoreGrain
     var ct = gct.CancellationToken;
     var db = RequestServices.GetRequiredService<SecondServiceDbContext>();
 
-    var deleted = await db.Stores.Where(b => b.Id == id).ExecuteDeleteAsync(ct);
+    var entity = await db.Stores.FirstOrDefaultAsync(s => s.Id == id, ct);
+    if (entity is null)
+    {
+      //set in-memory
+      _cache = null;
+      return Result.NotFound();
+    }
+    db.Remove(entity);
+    db.AddToOutbox(new StoreDeletedEvent(id));
+    await db.SaveChangesAsync(ct);
 
     //set in-memory
-    _state = null;
+    _cache = null;
 
-    return deleted > 0 ? Result.Ok() : Result.NotFound();
+    return Result.Ok();
   }
 
-  public async Task<Result<StoreGrainState>> GetStoreAsync(GrainCancellationToken gct)
+  public async Task<Result<StoreEntitySurrogate>> GetStoreAsync(GrainCancellationToken gct)
   {
     var id = this.GetPrimaryKey();
     var ct = gct.CancellationToken;
     var db = RequestServices.GetRequiredService<SecondServiceDbContext>();
 
     //check in-memory
-    if (_state is null)
+    if (_cache is null)
     {
       var entity = await db.Stores.FirstOrDefaultAsync(s => s.Id == id, ct);
 
       //set in-memory
-      _state = entity?.ToState();
+      _cache = entity?.ToSurrogate();
     }
 
-    //create event
-    db.AddToOutbox(new StoreQueriedByIdEvent(id));
-    await db.SaveChangesAsync(ct);
-
-    var result = _state is null ?
-      Result<StoreGrainState>.NotFound(string.Format("Store with id: {0} not found.", id)) :
-      _state;
+    var result = _cache is null ?
+      Result<StoreEntitySurrogate>.NotFound(string.Format("Store with id: {0} not found.", id)) :
+      _cache;
     return result;
   }
 
   public Task<Result> InvalidateStateAsync(GrainCancellationToken gct)
   {
-    _state = null;
+    _cache = null;
     return Task.FromResult(Result.Ok());
   }
 
-  public async Task<Result<StoreGrainState>> UpdateStoreAsync(StoreGrainState book, GrainCancellationToken gct)
+  public async Task<Result<StoreEntitySurrogate>> UpdateStoreAsync(StoreEntitySurrogate book, GrainCancellationToken gct)
   {
     var id = this.GetPrimaryKey();
     var ct = gct.CancellationToken;
@@ -89,12 +95,12 @@ internal class StoreGrain : BaseGrain, IStoreGrain
     if (updated > 0)
     {
       //set in-memory
-      _state = book;
+      _cache = book;
       return book;
     }
     else
     {
-      return Result<StoreGrainState>.NotFound();
+      return Result<StoreEntitySurrogate>.NotFound();
     }
   }
 }

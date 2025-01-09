@@ -38,7 +38,7 @@ internal class CreateStore(IGrainFactory grainFactory)
     CreateStoreRequest req,
     CancellationToken ct)
   {
-    var store = new StoreGrainState(
+    var store = new StoreEntitySurrogate(
       Name: req.Body.Name);
     var id = GuidV7.CreateVersion7();
 

@@ -1,5 +1,5 @@
 ﻿namespace ModularMonolith.Modules.SecondService.Features.Stores.Orleans;
 
 [GenerateSerializer]
-internal record StoreGrainState(
+internal record StoreEntitySurrogate(
   string Name);

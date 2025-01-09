@@ -3,12 +3,12 @@ using Microsoft.Extensions.Logging;
 using ModularMonolith.Modules.FirstService.IntegrationContracts.Integrations.Books;
 
 namespace ModularMonolith.Modules.SecondService.Integrations.FirstService.Books;
-internal class BookQueriedConsumer(ILogger<BookQueriedConsumer> logger)
-  : IConsumer<BookQueriedByIdEvent>
+internal class BookDeletedConsumer(ILogger<BookDeletedConsumer> logger)
+  : IConsumer<BookDeletedEvent>
 {
-  public Task Consume(ConsumeContext<BookQueriedByIdEvent> context)
+  public Task Consume(ConsumeContext<BookDeletedEvent> context)
   {
-    logger.LogInformation("Book queried by id: {query}.", context.Message);
+    logger.LogInformation("Book deleted: {book}.", context.Message);
     return Task.CompletedTask;
   }
 }

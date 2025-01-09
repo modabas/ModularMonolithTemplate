@@ -11,9 +11,9 @@ namespace ModularMonolith.Modules.FirstService.Features.Books.Orleans;
 
 internal class BookGrain : BaseGrain, IBookGrain
 {
-  private BookGrainState? _state;
+  private BookEntitySurrogate? _cache;
 
-  public async Task<Result<Guid>> CreateBookAsync(BookGrainState book, GrainCancellationToken gct)
+  public async Task<Result<Guid>> CreateBookAsync(BookEntitySurrogate book, GrainCancellationToken gct)
   {
     var id = this.GetPrimaryKey();
     var ct = gct.CancellationToken;
@@ -24,7 +24,7 @@ internal class BookGrain : BaseGrain, IBookGrain
     await db.SaveChangesAsync(ct);
 
     //set in-memory
-    _state = book;
+    _cache = book;
 
     return id;
   }
@@ -35,46 +35,51 @@ internal class BookGrain : BaseGrain, IBookGrain
     var ct = gct.CancellationToken;
     var db = RequestServices.GetRequiredService<FirstServiceDbContext>();
 
-    var deleted = await db.Books.Where(b => b.Id == id).ExecuteDeleteAsync(ct);
+    var entity = await db.Books.FirstOrDefaultAsync(b => b.Id == id, ct);
+    if (entity is null)
+    {
+      //set in-memory
+      _cache = null;
+      return Result.NotFound();
+    }
+    db.Remove(entity);
+    db.AddToOutbox(new BookDeletedEvent(id));
+    await db.SaveChangesAsync(ct);
 
     //set in-memory
-    _state = null;
+    _cache = null;
 
-    return deleted > 0 ? Result.Ok() : Result.NotFound();
+    return Result.Ok();
   }
 
-  public async Task<Result<BookGrainState>> GetBookAsync(GrainCancellationToken gct)
+  public async Task<Result<BookEntitySurrogate>> GetBookAsync(GrainCancellationToken gct)
   {
     var id = this.GetPrimaryKey();
     var ct = gct.CancellationToken;
     var db = RequestServices.GetRequiredService<FirstServiceDbContext>();
 
     //check in-memory
-    if (_state is null)
+    if (_cache is null)
     {
       var entity = await db.Books.FirstOrDefaultAsync(b => b.Id == id, ct);
 
       //set in-memory
-      _state = entity?.ToState();
+      _cache = entity?.ToSurrogate();
     }
 
-    //create event
-    db.AddToOutbox(new BookQueriedByIdEvent(id));
-    await db.SaveChangesAsync(ct);
-
-    var result = _state is null ?
-      Result<BookGrainState>.NotFound(string.Format("Book with id: {0} not found.", id)) :
-      _state;
+    var result = _cache is null ?
+      Result<BookEntitySurrogate>.NotFound(string.Format("Book with id: {0} not found.", id)) :
+      _cache;
     return result;
   }
 
   public Task<Result> InvalidateStateAsync(GrainCancellationToken gct)
   {
-    _state = null;
+    _cache = null;
     return Task.FromResult(Result.Ok());
   }
 
-  public async Task<Result<BookGrainState>> UpdateBookAsync(BookGrainState book, GrainCancellationToken gct)
+  public async Task<Result<BookEntitySurrogate>> UpdateBookAsync(BookEntitySurrogate book, GrainCancellationToken gct)
   {
     var id = this.GetPrimaryKey();
     var ct = gct.CancellationToken;
@@ -91,12 +96,12 @@ internal class BookGrain : BaseGrain, IBookGrain
     if (updated > 0)
     {
       //set in-memory
-      _state = book;
+      _cache = book;
       return book;
     }
     else
     {
-      return Result<BookGrainState>.NotFound();
+      return Result<BookEntitySurrogate>.NotFound();
     }
   }
 }

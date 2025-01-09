@@ -3,7 +3,7 @@
 namespace ModularMonolith.Modules.SecondService.Features.Stores.Orleans;
 internal static class StoreExtensions
 {
-  public static StoreEntity ToEntity(this StoreGrainState state, Guid id)
+  public static StoreEntity ToEntity(this StoreEntitySurrogate state, Guid id)
   {
     return new StoreEntity()
     {
@@ -12,9 +12,9 @@ internal static class StoreExtensions
     };
   }
 
-  public static StoreGrainState ToState(this StoreEntity entity)
+  public static StoreEntitySurrogate ToSurrogate(this StoreEntity entity)
   {
-    return new StoreGrainState(
+    return new StoreEntitySurrogate(
        Name: entity.Name);
   }
 }

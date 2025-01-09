@@ -1,2 +1,2 @@
 ﻿namespace ModularMonolith.Modules.SecondService.IntegrationContracts.Integrations.Stores;
-public record StoreQueriedByIdEvent(Guid Id);
+public record StoreDeletedEvent(Guid Id);

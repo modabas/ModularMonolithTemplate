@@ -38,7 +38,7 @@ internal class UpdateStore(IGrainFactory grainFactory)
     UpdateStoreRequest req,
     CancellationToken ct)
   {
-    var store = new StoreGrainState(
+    var store = new StoreEntitySurrogate(
       Name: req.Body.Name);
 
     using (var gcts = new GrainCancellationTokenSource())

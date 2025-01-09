@@ -43,7 +43,7 @@ internal class UpdateBook(IGrainFactory grainFactory)
     UpdateBookRequest req,
     CancellationToken ct)
   {
-    var book = new BookGrainState(
+    var book = new BookEntitySurrogate(
       Title: req.Body.Title,
       Author: req.Body.Author,
       Price: req.Body.Price);

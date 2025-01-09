@@ -3,7 +3,7 @@
 namespace ModularMonolith.Modules.FirstService.Features.Books.Orleans;
 internal static class BookExtensions
 {
-  public static BookEntity ToEntity(this BookGrainState state, Guid id)
+  public static BookEntity ToEntity(this BookEntitySurrogate state, Guid id)
   {
     return new BookEntity()
     {
@@ -14,9 +14,9 @@ internal static class BookExtensions
     };
   }
 
-  public static BookGrainState ToState(this BookEntity entity)
+  public static BookEntitySurrogate ToSurrogate(this BookEntity entity)
   {
-    return new BookGrainState(
+    return new BookEntitySurrogate(
        Title: entity.Title,
        Author: entity.Author,
        Price: entity.Price);

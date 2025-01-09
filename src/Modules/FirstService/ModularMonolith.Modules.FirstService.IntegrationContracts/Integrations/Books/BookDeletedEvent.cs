@@ -1,2 +1,3 @@
 ﻿namespace ModularMonolith.Modules.FirstService.IntegrationContracts.Integrations.Books;
-public record BookQueriedByIdEvent(Guid Id);
+
+public record BookDeletedEvent(Guid Id);
