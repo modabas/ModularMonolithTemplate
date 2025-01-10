@@ -2,7 +2,7 @@
 
 This is a template for creating a modular monolith application utilizing vertical slice architecture. Each module is a separate project in the solution, the modules are then combined under a single Host at runtime. Internals of each module is only visible to Host and not to other modules, so that modules can interact with each other only through designated interfaces. Those interfaces may be:
 
-- Through pub/sub messages shared between modules; message contracts are in IntegrationContracts projects for both modules,
+- Through pub/sub messages shared between modules; message contracts are in IntegrationContracts projects for each module,
 - Through Orleans public grain interfaces shared between modules; this template doesn't contain any,
 - Through web apis; though web apis would be better suited for consumption by external applications.
 
@@ -12,7 +12,7 @@ This is a template for creating a modular monolith application utilizing vertica
 
 ## Host
 
-Host is a Web Application co-hosting Microsoft.Orleans server in same process. It is responsible for discovering and registering the modules and their dependencies at runtime along with db context migration jobs of the modules at startup and message publishing jobs from db transactional outbox tables to message bus.
+Host is a Web Application co-hosting Microsoft.Orleans server in same process. It is responsible for discovering and registering the modules and their dependencies at runtime along with db context migration jobs of the modules at startup and message publishing jobs from db outbox tables to message bus.
 
 ## Apis
 
