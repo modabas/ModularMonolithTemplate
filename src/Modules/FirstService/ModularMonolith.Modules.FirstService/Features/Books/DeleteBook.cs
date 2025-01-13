@@ -18,7 +18,7 @@ internal class DeleteBookRequestValidator : AbstractValidator<DeleteBookRequest>
   }
 }
 
-[MapToGroup(typeof(BooksV1RouteGroup))]
+[MapToGroup<BooksV1RouteGroup>()]
 internal class DeleteBook(IGrainFactory grainFactory)
   : WebResultEndpoint<DeleteBookRequest>
 {

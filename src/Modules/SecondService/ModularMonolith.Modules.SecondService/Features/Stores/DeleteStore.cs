@@ -18,7 +18,7 @@ internal class DeleteStoreRequestValidator : AbstractValidator<DeleteStoreReques
   }
 }
 
-[MapToGroup(typeof(StoresRouteGroup))]
+[MapToGroup<StoresRouteGroup>()]
 internal class DeleteStore(IGrainFactory grainFactory)
   : BusinessResultEndpoint<DeleteStoreRequest>
 {

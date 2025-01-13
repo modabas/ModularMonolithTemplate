@@ -9,7 +9,7 @@ using ModularMonolith.Modules.FirstService.Features.Books.Configuration;
 
 namespace ModularMonolith.Modules.FirstService.Features.Books;
 
-[MapToGroup(typeof(BooksV1RouteGroup))]
+[MapToGroup<BooksV1RouteGroup>()]
 internal class ListBooks(FirstServiceDbContext db)
   : WebResultEndpointWithEmptyRequest<ListBooksResponse>
 {

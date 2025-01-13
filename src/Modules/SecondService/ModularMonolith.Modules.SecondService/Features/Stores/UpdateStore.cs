@@ -21,7 +21,7 @@ internal class UpdateStoreRequestValidator : AbstractValidator<UpdateStoreReques
   }
 }
 
-[MapToGroup(typeof(StoresRouteGroup))]
+[MapToGroup<StoresRouteGroup>()]
 internal class UpdateStore(IGrainFactory grainFactory)
   : BusinessResultEndpoint<UpdateStoreRequest, UpdateStoreResponse>
 {

@@ -3,7 +3,7 @@ using ModEndpoints.Core;
 
 namespace ModularMonolith.Modules.SecondService.Features.Stores.Configuration;
 
-[MapToGroup(typeof(FeaturesRouteGroup))]
+[MapToGroup<FeaturesRouteGroup>()]
 internal class StoresRouteGroup : RouteGroupConfigurator
 {
   protected override void Configure(

@@ -25,7 +25,7 @@ internal class UpdateBookRequestValidator : AbstractValidator<UpdateBookRequest>
   }
 }
 
-[MapToGroup(typeof(BooksV1RouteGroup))]
+[MapToGroup<BooksV1RouteGroup>()]
 internal class UpdateBook(IGrainFactory grainFactory)
   : WebResultEndpoint<UpdateBookRequest, UpdateBookResponse>
 {
