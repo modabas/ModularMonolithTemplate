@@ -19,7 +19,7 @@ internal class GetStoreByIdRequestValidator : AbstractValidator<GetStoreByIdRequ
   }
 }
 
-[RouteGroupMember(typeof(StoresRouteGroup))]
+[MapToGroup(typeof(StoresRouteGroup))]
 internal class GetStoreById(IGrainFactory grainFactory)
   : BusinessResultEndpoint<GetStoreByIdRequest, GetStoreByIdResponse>
 {

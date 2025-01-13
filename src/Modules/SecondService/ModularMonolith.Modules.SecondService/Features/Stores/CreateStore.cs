@@ -21,7 +21,7 @@ internal class CreateStoreRequestValidator : AbstractValidator<CreateStoreReques
   }
 }
 
-[RouteGroupMember(typeof(StoresRouteGroup))]
+[MapToGroup(typeof(StoresRouteGroup))]
 internal class CreateStore(IGrainFactory grainFactory)
   : BusinessResultEndpoint<CreateStoreRequest, CreateStoreResponse>
 {

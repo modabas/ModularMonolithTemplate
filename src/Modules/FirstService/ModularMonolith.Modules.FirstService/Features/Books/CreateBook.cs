@@ -24,7 +24,7 @@ internal class CreateBookRequestValidator : AbstractValidator<CreateBookRequest>
   }
 }
 
-[RouteGroupMember(typeof(BooksV1RouteGroup))]
+[MapToGroup(typeof(BooksV1RouteGroup))]
 internal class CreateBook(IGrainFactory grainFactory, ILocationStore location)
   : WebResultEndpoint<CreateBookRequest, CreateBookResponse>
 {

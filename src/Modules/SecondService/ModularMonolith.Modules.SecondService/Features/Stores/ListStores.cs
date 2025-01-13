@@ -8,7 +8,7 @@ using ModularMonolith.Modules.SecondService.Features.Stores.Configuration;
 
 namespace ModularMonolith.Modules.SecondService.Features.Stores;
 
-[RouteGroupMember(typeof(StoresRouteGroup))]
+[MapToGroup(typeof(StoresRouteGroup))]
 internal class ListStores(SecondServiceDbContext db)
   : BusinessResultEndpointWithEmptyRequest<ListStoresResponse>
 {

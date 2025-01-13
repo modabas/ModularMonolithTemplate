@@ -4,7 +4,7 @@ using ModEndpoints.Core;
 
 namespace ModularMonolith.Modules.FirstService.Features.Books.Configuration;
 
-[RouteGroupMember(typeof(FeaturesRouteGroup))]
+[MapToGroup(typeof(FeaturesRouteGroup))]
 internal class BooksV1RouteGroup : RouteGroupConfigurator
 {
   protected override void Configure(
