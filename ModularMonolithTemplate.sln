@@ -24,6 +24,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "__SolutionItems", "__Soluti
 		.editorconfig = .editorconfig
 		Directory.Build.props = Directory.Build.props
 		HighLevelDesignDiagram.png = HighLevelDesignDiagram.png
+		LICENSE.txt = LICENSE.txt
 		README.md = README.md
 	EndProjectSection
 EndProject
