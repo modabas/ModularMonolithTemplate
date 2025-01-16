@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using ModResults;
-using ModularMonolith.Modules.FirstService.IntegrationContracts.Integrations.Books;
 using ModularMonolith.Modules.SecondService.Data;
 using ModularMonolith.Modules.SecondService.IntegrationContracts.Integrations.Stores;
 using ModularMonolith.Shared.Data.SimpleOutbox.Extensions;
