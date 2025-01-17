@@ -3,8 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using ModResults;
 using ModularMonolith.Modules.SecondService.Data;
-using ModularMonolith.Modules.SecondService.IntegrationContracts.Integrations.Stores;
 using ModularMonolith.Shared.Data.SimpleOutbox.Extensions;
+using ModularMonolith.Shared.IntegrationContracts.SecondService.Stores;
 using ModularMonolith.Shared.Orleans;
 
 namespace ModularMonolith.Modules.SecondService.Features.Stores.Orleans;

@@ -1,4 +1,4 @@
-﻿namespace ModularMonolith.Modules.FirstService.IntegrationContracts.Integrations.Books;
+﻿namespace ModularMonolith.Shared.IntegrationContracts.FirstService.Books;
 
 public record BookCreatedEvent(
   Guid Id,

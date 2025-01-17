@@ -1,6 +1,6 @@
 ﻿using MassTransit;
 using Microsoft.Extensions.Logging;
-using ModularMonolith.Modules.FirstService.IntegrationContracts.Integrations.Books;
+using ModularMonolith.Shared.IntegrationContracts.FirstService.Books;
 
 namespace ModularMonolith.Modules.SecondService.Integrations.FirstService.Books;
 internal class BookDeletedConsumer(ILogger<BookDeletedConsumer> logger)

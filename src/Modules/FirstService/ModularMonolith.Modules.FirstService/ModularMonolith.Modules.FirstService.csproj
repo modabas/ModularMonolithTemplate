@@ -1,9 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Shared\ModularMonolith.Shared.IntegrationContracts\ModularMonolith.Shared.IntegrationContracts.csproj" />
     <ProjectReference Include="..\..\..\Shared\ModularMonolith.Shared\ModularMonolith.Shared.csproj" />
-    <ProjectReference Include="..\..\SecondService\ModularMonolith.Modules.SecondService.IntegrationContracts\ModularMonolith.Modules.SecondService.IntegrationContracts.csproj" />
     <ProjectReference Include="..\ModularMonolith.Modules.FirstService.FeatureContracts\ModularMonolith.Modules.FirstService.FeatureContracts.csproj" />
-    <ProjectReference Include="..\ModularMonolith.Modules.FirstService.IntegrationContracts\ModularMonolith.Modules.FirstService.IntegrationContracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>
