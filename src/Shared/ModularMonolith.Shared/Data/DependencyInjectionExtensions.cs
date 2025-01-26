@@ -28,7 +28,7 @@ public static class DependencyInjectionExtensions
     where TDbContext : DbContext
   {
     //Register Db context
-    services.AddDbContext<TDbContext>((provider, options) =>
+    services.AddDbContextPool<TDbContext>((provider, options) =>
     {
       configureDbContextOptionsBuilder?.Invoke(provider, options);
       options.UseSnakeCaseNamingConvention();
