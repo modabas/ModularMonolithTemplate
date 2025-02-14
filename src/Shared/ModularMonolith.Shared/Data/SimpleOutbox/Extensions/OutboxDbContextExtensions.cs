@@ -9,9 +9,10 @@ namespace ModularMonolith.Shared.Data.SimpleOutbox.Extensions;
 
 public static class OutboxDbContextExtensions
 {
-  public static Guid AddToOutbox<T>(this IOutboxDbContext dbContext, T message, Dictionary<string, object?>? headers = null, string? publisherName = null)
+  public static Guid AddToOutbox<T>(this IOutboxDbContext dbContext, T message, Dictionary<string, object?>? headers = null, string? publisherName = null, TimeSpan? delay = null)
   {
     var activity = Activity.Current;
+    var messageDelay = delay is null ? TimeSpan.Zero : delay;
     var entity = new OutboxMessageEntity
     {
       Id = GuidV7.CreateVersion7(),
@@ -23,7 +24,8 @@ public static class OutboxDbContextExtensions
       SpanId = activity?.SpanId.ToString(),
       TraceId = activity?.TraceId.ToString(),
       Headers = headers is null ? null : JsonSerializer.Serialize(headers),
-      PublisherName = publisherName
+      PublisherName = publisherName,
+      RetryAt = DateTimeOffset.UtcNow.Add(messageDelay.Value)
     };
 
     dbContext.OutboxMessages.Add(entity);

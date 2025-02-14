@@ -41,7 +41,7 @@ public class OutboxMessagePublisherService<TDbContext>(
               {
                 var utcNow = DateTimeOffset.UtcNow;
                 var messages = await dbContext.OutboxMessages
-                    .Where(x => x.State == MessageState.New ||
+                    .Where(x => x.State == MessageState.New && x.RetryCount <= settings.PublisherRetryCount && x.RetryAt <= utcNow ||
                       x.State == MessageState.Errored && x.RetryCount <= settings.PublisherRetryCount && x.RetryAt <= utcNow)
                     .OrderBy(x => x.Id)
                     .WithQueryLock(QueryLockStrength.Update, QueryLockBehavior.SkipLocked)
