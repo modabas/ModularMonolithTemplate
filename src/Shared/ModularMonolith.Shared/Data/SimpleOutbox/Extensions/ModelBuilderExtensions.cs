@@ -10,7 +10,7 @@ public static class ModelBuilderExtensions
     var entity = modelBuilder.Entity<OutboxMessageEntity>();
 
     entity
-      .HasIndex(x => new { x.State, x.RetryCount, x.RetryAt })
+      .HasIndex(x => new { x.State, x.RetryCount, x.PublishAt })
       .IsUnique(false);
 
     return modelBuilder;

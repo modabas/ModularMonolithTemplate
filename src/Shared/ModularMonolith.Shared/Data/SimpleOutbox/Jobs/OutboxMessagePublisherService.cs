@@ -41,8 +41,8 @@ public class OutboxMessagePublisherService<TDbContext>(
               {
                 var utcNow = DateTimeOffset.UtcNow;
                 var messages = await dbContext.OutboxMessages
-                    .Where(x => x.State == MessageState.New && x.RetryCount <= settings.PublisherRetryCount && x.RetryAt <= utcNow ||
-                      x.State == MessageState.Errored && x.RetryCount <= settings.PublisherRetryCount && x.RetryAt <= utcNow)
+                    .Where(x => x.State == MessageState.New && x.RetryCount <= settings.PublisherRetryCount && x.PublishAt <= utcNow ||
+                      x.State == MessageState.Errored && x.RetryCount <= settings.PublisherRetryCount && x.PublishAt <= utcNow)
                     .OrderBy(x => x.Id)
                     .WithQueryLock(QueryLockStrength.Update, QueryLockBehavior.SkipLocked)
                     .Take(settings.PublisherBatchCount)
@@ -128,7 +128,7 @@ public class OutboxMessagePublisherService<TDbContext>(
                       .ExecuteUpdateAsync(x => x.SetProperty(m => m.State, MessageState.Errored)
                           .SetProperty(m => m.UpdatedAt, utcNow)
                           .SetProperty(m => m.RetryCount, m => m.RetryCount + 1)
-                          .SetProperty(m => m.RetryAt, utcRetryAt), cancellationToken: cancellationToken);
+                          .SetProperty(m => m.PublishAt, utcRetryAt), cancellationToken: cancellationToken);
                 }
                 await dbContext.SaveChangesAsync(cancellationToken);
                 await transactionScope.CommitAsync(cancellationToken);

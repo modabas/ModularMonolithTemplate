@@ -45,7 +45,7 @@ namespace ModularMonolith.Modules.FirstService.Data.Migrations
                     retry_count = table.Column<int>(type: "integer", nullable: false),
                     created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    retry_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                    publish_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -53,10 +53,10 @@ namespace ModularMonolith.Modules.FirstService.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "ix_outbox_messages_state_retry_count_retry_at",
+                name: "ix_outbox_messages_state_retry_count_publish_at",
                 schema: "first_service",
                 table: "outbox_messages",
-                columns: new[] { "state", "retry_count", "retry_at" });
+                columns: new[] { "state", "retry_count", "publish_at" });
         }
 
         /// <inheritdoc />

@@ -18,7 +18,7 @@ namespace ModularMonolith.Modules.SecondService.Data.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("second_service")
-                .HasAnnotation("ProductVersion", "9.0.0")
+                .HasAnnotation("ProductVersion", "9.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -61,13 +61,13 @@ namespace ModularMonolith.Modules.SecondService.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("payload");
 
+                    b.Property<DateTimeOffset>("PublishAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("publish_at");
+
                     b.Property<string>("PublisherName")
                         .HasColumnType("text")
                         .HasColumnName("publisher_name");
-
-                    b.Property<DateTimeOffset>("RetryAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("retry_at");
 
                     b.Property<int>("RetryCount")
                         .HasColumnType("integer")
@@ -96,8 +96,8 @@ namespace ModularMonolith.Modules.SecondService.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_outbox_messages");
 
-                    b.HasIndex("State", "RetryCount", "RetryAt")
-                        .HasDatabaseName("ix_outbox_messages_state_retry_count_retry_at");
+                    b.HasIndex("State", "RetryCount", "PublishAt")
+                        .HasDatabaseName("ix_outbox_messages_state_retry_count_publish_at");
 
                     b.ToTable("outbox_messages", "second_service");
                 });

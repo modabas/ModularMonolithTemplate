@@ -2,9 +2,8 @@
 
 namespace ModularMonolith.Shared.Data.SimpleOutbox.Entities;
 
-public class OutboxMessageEntity
+public class OutboxMessageEntity : BaseEntity
 {
-  public required Guid Id { get; set; }
   public MessageState State { get; set; } = MessageState.New;
 
   public string? PublisherName { get; set; }
@@ -16,6 +15,6 @@ public class OutboxMessageEntity
 
   public int RetryCount { get; set; } = 0;
   public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
-  public DateTimeOffset? UpdatedAt { get; set; }
-  public DateTimeOffset RetryAt { get; set; } = DateTimeOffset.UtcNow;
+  public DateTimeOffset? UpdatedAt { get; set; } = null;
+  public DateTimeOffset PublishAt { get; set; }
 }
