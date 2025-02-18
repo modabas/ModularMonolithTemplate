@@ -20,9 +20,9 @@ This tamplate utilizes [ModEndpoints](https://github.com/modabas/ModEndpoints) f
 
 ## Db
 
-EfCore over a Postgres database is used for data access. Each module can define its own entities and db context. Each db context can point to a different database or schema. The host will automatically run the migrations for all the db contexts at startup. 
+EfCore over a Postgres database is used for data access. Each module has its own db context and entities. Each db context can point to a different database or schema. The host will automatically run the migrations for all the db contexts at startup. 
 
-Implements transactional outbox pattern for consistent db updates and message publishing.
+Implements transactional outbox pattern on db context basis for consistent db updates and message publishing. Each module owns an outbox table as part of its db context and each module registers a background service on startup which publishes messages in its outbox table to message bus.
 
 ## Messaging
 
