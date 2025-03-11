@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using Microsoft.AspNetCore.Http;
 using ModEndpoints;
 using ModEndpoints.Core;
 using ModResults;
@@ -28,7 +29,8 @@ internal class DeleteBook(IGrainFactory grainFactory)
     IServiceProvider serviceProvider,
     IRouteGroupConfigurator? parentRouteGroup)
   {
-    MapDelete(Pattern);
+    MapDelete(Pattern)
+      .Produces(StatusCodes.Status204NoContent);
   }
 
   protected override async Task<Result> HandleAsync(
