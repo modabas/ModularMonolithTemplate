@@ -17,6 +17,6 @@
   <ItemGroup>
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
     <PackageReference Include="Microsoft.Orleans.Sdk" Version="9.1.2" />
-    <PackageReference Include="ModEndpoints" Version="0.6.5" />
+    <PackageReference Include="ModEndpoints" Version="0.6.6" />
   </ItemGroup>
 </Project>

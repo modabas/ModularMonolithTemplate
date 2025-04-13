@@ -2,7 +2,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Orleans.Core" Version="9.1.2" />
-    <PackageReference Include="ModEndpoints.Core" Version="0.6.5" />
+    <PackageReference Include="ModEndpoints.Core" Version="0.6.6" />
     <PackageReference Include="ModResults" Version="1.0.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
     <PackageReference Include="UUIDNext" Version="4.1.1" />
