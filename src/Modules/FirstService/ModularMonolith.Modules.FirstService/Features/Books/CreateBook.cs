@@ -31,10 +31,10 @@ internal class CreateBook(IGrainFactory grainFactory, ILocationStore location)
   private const string Pattern = "/";
 
   protected override void Configure(
-    IServiceProvider serviceProvider,
-    IRouteGroupConfigurator? parentRouteGroup)
+    EndpointConfigurationBuilder builder,
+    ConfigurationContext<EndpointConfigurationParameters> configurationContext)
   {
-    MapPost(Pattern)
+    builder.MapPost(Pattern)
       .Produces<CreateBookResponse>(StatusCodes.Status201Created);
   }
   protected override async Task<Result<CreateBookResponse>> HandleAsync(

@@ -28,10 +28,10 @@ internal class CreateStore(IGrainFactory grainFactory)
   private const string Pattern = "/";
 
   protected override void Configure(
-    IServiceProvider serviceProvider,
-    IRouteGroupConfigurator? parentRouteGroup)
+    EndpointConfigurationBuilder builder,
+    ConfigurationContext<EndpointConfigurationParameters> configurationContext)
   {
-    MapPost(Pattern);
+    builder.MapPost(Pattern);
   }
 
   protected override async Task<Result<CreateStoreResponse>> HandleAsync(

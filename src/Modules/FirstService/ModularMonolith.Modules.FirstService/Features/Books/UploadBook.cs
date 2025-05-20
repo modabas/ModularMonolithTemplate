@@ -29,10 +29,10 @@ internal class UploadBook
   private const string Pattern = "/upload/{Title}";
 
   protected override void Configure(
-    IServiceProvider serviceProvider,
-    IRouteGroupConfigurator? parentRouteGroup)
+    EndpointConfigurationBuilder builder,
+    ConfigurationContext<EndpointConfigurationParameters> configurationContext)
   {
-    MapPost(Pattern)
+    builder.MapPost(Pattern)
       .DisableAntiforgery()
       .Produces<UploadBookResponse>();
   }

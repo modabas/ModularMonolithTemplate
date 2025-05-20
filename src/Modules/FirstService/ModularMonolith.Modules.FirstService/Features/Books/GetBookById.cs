@@ -27,10 +27,10 @@ internal class GetBookById(IGrainFactory grainFactory)
   private const string Pattern = "/{Id}";
 
   protected override void Configure(
-    IServiceProvider serviceProvider,
-    IRouteGroupConfigurator? parentRouteGroup)
+    EndpointConfigurationBuilder builder,
+    ConfigurationContext<EndpointConfigurationParameters> configurationContext)
   {
-    MapGet(Pattern)
+    builder.MapGet(Pattern)
       .Produces<GetBookByIdResponse>();
   }
 

@@ -5,9 +5,9 @@ namespace ModularMonolith.Modules.SecondService.Features;
 internal class FeaturesRouteGroup : RouteGroupConfigurator
 {
   protected override void Configure(
-    IServiceProvider serviceProvider,
-    IRouteGroupConfigurator? parentRouteGroup)
+    RouteGroupConfigurationBuilder builder,
+    ConfigurationContext<RouteGroupConfigurationParameters> configurationContext)
   {
-    MapGroup("/second_service/api");
+    builder.MapGroup("/second_service/api");
   }
 }

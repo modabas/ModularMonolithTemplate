@@ -15,10 +15,10 @@ internal class ListStores(SecondServiceDbContext db)
   private const string Pattern = "/";
 
   protected override void Configure(
-    IServiceProvider serviceProvider,
-    IRouteGroupConfigurator? parentRouteGroup)
+    EndpointConfigurationBuilder builder,
+    ConfigurationContext<EndpointConfigurationParameters> configurationContext)
   {
-    MapGet(Pattern);
+    builder.MapGet(Pattern);
   }
 
   protected override async Task<Result<ListStoresResponse>> HandleAsync(

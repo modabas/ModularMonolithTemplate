@@ -7,10 +7,10 @@ namespace ModularMonolith.Modules.SecondService.Features.Stores.Configuration;
 internal class StoresRouteGroup : RouteGroupConfigurator
 {
   protected override void Configure(
-    IServiceProvider serviceProvider,
-    IRouteGroupConfigurator? parentRouteGroup)
+    RouteGroupConfigurationBuilder builder,
+    ConfigurationContext<RouteGroupConfigurationParameters> configurationContext)
   {
-    MapGroup("/stores")
+    builder.MapGroup("/stores")
       .WithTags("/SecondService/Stores");
   }
 }
