@@ -14,7 +14,7 @@ public static class ServerTimeoutExtensions
     return builder;
   }
 
-  public static ServerTimeoutEndpointSetting GetDefinition(this ServerTimeoutOptions options, IEndpointConfigurator endpoint)
+  public static ServerTimeoutEndpointSetting GetDefinition(this ServerTimeoutOptions options, IEndpointConfiguratorMarker endpoint)
   {
     var endpointType = endpoint.GetType().FullName;
     if (string.IsNullOrWhiteSpace(endpointType))
@@ -30,7 +30,7 @@ public static class ServerTimeoutExtensions
     return new ServerTimeoutEndpointSetting(true, endpointSetting.Timeout);
   }
 
-  public static TBuilder WithServerTimeout<TBuilder>(this TBuilder builder, IServiceProvider serviceProvider, IEndpointConfigurator endpoint) where TBuilder : IEndpointConventionBuilder
+  public static TBuilder WithServerTimeout<TBuilder>(this TBuilder builder, IServiceProvider serviceProvider, IEndpointConfiguratorMarker endpoint) where TBuilder : IEndpointConventionBuilder
   {
     var definition = serviceProvider
       .GetService<IOptions<ServerTimeoutOptions>>()?

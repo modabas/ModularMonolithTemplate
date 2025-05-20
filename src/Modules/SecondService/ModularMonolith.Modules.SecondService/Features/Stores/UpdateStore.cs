@@ -28,10 +28,10 @@ internal class UpdateStore(IGrainFactory grainFactory)
   private const string Pattern = "/{Id}";
 
   protected override void Configure(
-    IServiceProvider serviceProvider,
-    IRouteGroupConfigurator? parentRouteGroup)
+    EndpointConfigurationBuilder builder,
+    ConfigurationContext<EndpointConfigurationParameters> configurationContext)
   {
-    MapPut(Pattern);
+    builder.MapPut(Pattern);
   }
 
   protected override async Task<Result<UpdateStoreResponse>> HandleAsync(

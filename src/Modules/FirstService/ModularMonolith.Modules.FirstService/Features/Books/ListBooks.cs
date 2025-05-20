@@ -16,10 +16,10 @@ internal class ListBooks(FirstServiceDbContext db)
   private const string Pattern = "/";
 
   protected override void Configure(
-    IServiceProvider serviceProvider,
-    IRouteGroupConfigurator? parentRouteGroup)
+    EndpointConfigurationBuilder builder,
+    ConfigurationContext<EndpointConfigurationParameters> configurationContext)
   {
-    MapGet(Pattern)
+    builder.MapGet(Pattern)
       .Produces<ListBooksResponse>();
   }
 

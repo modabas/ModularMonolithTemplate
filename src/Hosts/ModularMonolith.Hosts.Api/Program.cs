@@ -32,15 +32,16 @@ app.UseHttpsRedirection();
 //  .UseAuthorization();
 
 app.MapModEndpoints(
-  (serviceProvider, builder, group, endpoint) =>
+  (builder, configurationContext) =>
   {
+    var endpoint = configurationContext.Parameters.CurrentEndpoint;
     builder.WithSummary(endpoint.GetType().Name);
     var endpointFullName = endpoint.GetType().FullName;
     if (!string.IsNullOrWhiteSpace(endpointFullName))
     {
       builder.WithName(endpointFullName);
     }
-    builder.WithServerTimeout(serviceProvider, endpoint)
+    builder.WithServerTimeout(configurationContext.ServiceProvider, endpoint)
       .AddEndpointFilter<ServerTimeoutFilter>();
   });
 

@@ -25,10 +25,10 @@ internal class DeleteStore(IGrainFactory grainFactory)
   private const string Pattern = "/{Id}";
 
   protected override void Configure(
-    IServiceProvider serviceProvider,
-    IRouteGroupConfigurator? parentRouteGroup)
+    EndpointConfigurationBuilder builder,
+    ConfigurationContext<EndpointConfigurationParameters> configurationContext)
   {
-    MapDelete(Pattern);
+    builder.MapDelete(Pattern);
   }
 
   protected override async Task<Result> HandleAsync(

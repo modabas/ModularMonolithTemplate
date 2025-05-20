@@ -26,10 +26,10 @@ internal class GetStoreById(IGrainFactory grainFactory)
   private const string Pattern = "/{Id}";
 
   protected override void Configure(
-    IServiceProvider serviceProvider,
-    IRouteGroupConfigurator? parentRouteGroup)
+    EndpointConfigurationBuilder builder,
+    ConfigurationContext<EndpointConfigurationParameters> configurationContext)
   {
-    MapGet(Pattern);
+    builder.MapGet(Pattern);
   }
 
   protected override async Task<Result<GetStoreByIdResponse>> HandleAsync(
