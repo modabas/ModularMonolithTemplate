@@ -20,7 +20,7 @@ internal static class DependencyInjectionExtensions
     builder.AddDatabase();
     builder.Services.AddHostedService<PgDbMigrationService<SecondServiceDbContext>>();
     builder.AddSimpleOutbox<SecondServiceDbContext>();
-    builder.Services.AddModEndpointsFromAssembly(typeof(DependencyInjectionExtensions).Assembly);
+    builder.Services.AddModEndpointsFromAssemblyContaining<GetStoreById>();
     builder.Services.AddValidatorsFromAssemblyContaining<GetStoreByIdRequestValidator>(includeInternalTypes: true);
 
     return builder;
