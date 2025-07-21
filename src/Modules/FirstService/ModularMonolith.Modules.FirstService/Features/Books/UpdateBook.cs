@@ -48,18 +48,12 @@ internal class UpdateBook(IGrainFactory grainFactory)
       Author: req.Body.Author,
       Price: req.Body.Price);
 
-    using (var gcts = new GrainCancellationTokenSource())
-    {
-      using (gcts.Link(ct))
-      {
-        var result = await grainFactory.GetGrain<IBookGrain>(req.Id).UpdateBookAsync(book, gcts.Token);
-        return result.ToResult(
-          book => new UpdateBookResponse(
-            Id: req.Id,
-            Title: book.Title,
-            Author: book.Author,
-            Price: book.Price));
-      }
-    }
+    var result = await grainFactory.GetGrain<IBookGrain>(req.Id).UpdateBookAsync(book, ct);
+    return result.ToResult(
+      book => new UpdateBookResponse(
+        Id: req.Id,
+        Title: book.Title,
+        Author: book.Author,
+        Price: book.Price));
   }
 }

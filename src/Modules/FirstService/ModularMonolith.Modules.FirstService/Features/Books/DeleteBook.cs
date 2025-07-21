@@ -37,13 +37,7 @@ internal class DeleteBook(IGrainFactory grainFactory)
   DeleteBookRequest req,
     CancellationToken ct)
   {
-    using (var gcts = new GrainCancellationTokenSource())
-    {
-      using (gcts.Link(ct))
-      {
-        var result = await grainFactory.GetGrain<IBookGrain>(req.Id).DeleteBookAsync(gcts.Token);
-        return result;
-      }
-    }
+    var result = await grainFactory.GetGrain<IBookGrain>(req.Id).DeleteBookAsync(ct);
+    return result;
   }
 }

@@ -42,14 +42,8 @@ internal class CreateStore(IGrainFactory grainFactory)
       Name: req.Body.Name);
     var id = GuidV7.CreateVersion7();
 
-    using (var gcts = new GrainCancellationTokenSource())
-    {
-      using (gcts.Link(ct))
-      {
-        var result = await grainFactory.GetGrain<IStoreGrain>(id).CreateStoreAsync(store, gcts.Token);
-        return result.ToResult(id => new CreateStoreResponse(id));
-      }
-    }
+    var result = await grainFactory.GetGrain<IStoreGrain>(id).CreateStoreAsync(store, ct);
+    return result.ToResult(id => new CreateStoreResponse(id));
   }
 }
 

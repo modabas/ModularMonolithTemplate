@@ -48,23 +48,17 @@ internal class CreateBook(IGrainFactory grainFactory, ILocationStore location)
 
     var id = GuidV7.CreateVersion7();
 
-    using (var gcts = new GrainCancellationTokenSource())
-    {
-      using (gcts.Link(ct))
+    var result = await grainFactory.GetGrain<IBookGrain>(id).CreateBookAsync(book, ct);
+    return await result.ToResultAsync(
+      async (id, state, ct) =>
       {
-        var result = await grainFactory.GetGrain<IBookGrain>(id).CreateBookAsync(book, gcts.Token);
-        return await result.ToResultAsync(
-          async (id, state, ct) =>
-          {
-            await state.Location.SetValueAsync(
-              typeof(GetBookById).FullName,
-              new { id = id },
-              ct);
-            return new CreateBookResponse(id);
-          },
-          new { Location = location },
+        await state.Location.SetValueAsync(
+          typeof(GetBookById).FullName,
+          new { id = id },
           ct);
-      }
-    }
+        return new CreateBookResponse(id);
+      },
+      new { Location = location },
+      ct);
   }
 }
