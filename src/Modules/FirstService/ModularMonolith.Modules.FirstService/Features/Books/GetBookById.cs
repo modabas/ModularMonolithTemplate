@@ -38,18 +38,12 @@ internal class GetBookById(IGrainFactory grainFactory)
     GetBookByIdRequest req,
     CancellationToken ct)
   {
-    using (var gcts = new GrainCancellationTokenSource())
-    {
-      using (gcts.Link(ct))
-      {
-        var result = await grainFactory.GetGrain<IBookGrain>(req.Id).GetBookAsync(gcts.Token);
-        return result.ToResult(
-          book => new GetBookByIdResponse(
-            Id: req.Id,
-            Title: book.Title,
-            Author: book.Author,
-            Price: book.Price));
-      }
-    }
+    var result = await grainFactory.GetGrain<IBookGrain>(req.Id).GetBookAsync(ct);
+    return result.ToResult(
+      book => new GetBookByIdResponse(
+        Id: req.Id,
+        Title: book.Title,
+        Author: book.Author,
+        Price: book.Price));
   }
 }

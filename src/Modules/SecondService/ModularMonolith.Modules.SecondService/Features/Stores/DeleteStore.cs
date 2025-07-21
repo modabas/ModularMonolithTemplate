@@ -35,13 +35,7 @@ internal class DeleteStore(IGrainFactory grainFactory)
     DeleteStoreRequest req,
     CancellationToken ct)
   {
-    using (var gcts = new GrainCancellationTokenSource())
-    {
-      using (gcts.Link(ct))
-      {
-        var result = await grainFactory.GetGrain<IStoreGrain>(req.Id).DeleteStoreAsync(gcts.Token);
-        return result;
-      }
-    }
+    var result = await grainFactory.GetGrain<IStoreGrain>(req.Id).DeleteStoreAsync(ct);
+    return result;
   }
 }

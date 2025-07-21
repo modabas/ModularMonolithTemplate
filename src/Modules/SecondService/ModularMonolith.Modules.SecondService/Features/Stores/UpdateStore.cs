@@ -41,16 +41,10 @@ internal class UpdateStore(IGrainFactory grainFactory)
     var store = new StoreEntitySurrogate(
       Name: req.Body.Name);
 
-    using (var gcts = new GrainCancellationTokenSource())
-    {
-      using (gcts.Link(ct))
-      {
-        var result = await grainFactory.GetGrain<IStoreGrain>(req.Id).UpdateStoreAsync(store, gcts.Token);
-        return result.ToResult(
-          book => new UpdateStoreResponse(
-            Id: req.Id,
-            Name: book.Name));
-      }
-    }
+    var result = await grainFactory.GetGrain<IStoreGrain>(req.Id).UpdateStoreAsync(store, ct);
+    return result.ToResult(
+      book => new UpdateStoreResponse(
+        Id: req.Id,
+        Name: book.Name));
   }
 }

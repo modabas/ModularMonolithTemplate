@@ -13,10 +13,9 @@ internal class BookGrain : BaseGrain, IBookGrain
 {
   private BookEntitySurrogate? _cache;
 
-  public async Task<Result<Guid>> CreateBookAsync(BookEntitySurrogate book, GrainCancellationToken gct)
+  public async Task<Result<Guid>> CreateBookAsync(BookEntitySurrogate book, CancellationToken ct)
   {
     var id = this.GetPrimaryKey();
-    var ct = gct.CancellationToken;
     var db = RequestServices.GetRequiredService<FirstServiceDbContext>();
 
     db.Books.Add(book.ToEntity(id));
@@ -29,10 +28,9 @@ internal class BookGrain : BaseGrain, IBookGrain
     return id;
   }
 
-  public async Task<Result> DeleteBookAsync(GrainCancellationToken gct)
+  public async Task<Result> DeleteBookAsync(CancellationToken ct)
   {
     var id = this.GetPrimaryKey();
-    var ct = gct.CancellationToken;
     var db = RequestServices.GetRequiredService<FirstServiceDbContext>();
 
     var entity = await db.Books.FirstOrDefaultAsync(b => b.Id == id, ct);
@@ -52,10 +50,9 @@ internal class BookGrain : BaseGrain, IBookGrain
     return Result.Ok();
   }
 
-  public async Task<Result<BookEntitySurrogate>> GetBookAsync(GrainCancellationToken gct)
+  public async Task<Result<BookEntitySurrogate>> GetBookAsync(CancellationToken ct)
   {
     var id = this.GetPrimaryKey();
-    var ct = gct.CancellationToken;
     var db = RequestServices.GetRequiredService<FirstServiceDbContext>();
 
     //check in-memory
@@ -73,16 +70,15 @@ internal class BookGrain : BaseGrain, IBookGrain
     return result;
   }
 
-  public Task<Result> InvalidateStateAsync(GrainCancellationToken gct)
+  public Task<Result> InvalidateStateAsync(CancellationToken ct)
   {
     _cache = null;
     return Task.FromResult(Result.Ok());
   }
 
-  public async Task<Result<BookEntitySurrogate>> UpdateBookAsync(BookEntitySurrogate book, GrainCancellationToken gct)
+  public async Task<Result<BookEntitySurrogate>> UpdateBookAsync(BookEntitySurrogate book, CancellationToken ct)
   {
     var id = this.GetPrimaryKey();
-    var ct = gct.CancellationToken;
     var db = RequestServices.GetRequiredService<FirstServiceDbContext>();
 
     var updated = await db.Books

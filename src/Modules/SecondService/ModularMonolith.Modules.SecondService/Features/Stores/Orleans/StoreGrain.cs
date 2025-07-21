@@ -13,10 +13,9 @@ internal class StoreGrain : BaseGrain, IStoreGrain
 {
   private StoreEntitySurrogate? _cache;
 
-  public async Task<Result<Guid>> CreateStoreAsync(StoreEntitySurrogate store, GrainCancellationToken gct)
+  public async Task<Result<Guid>> CreateStoreAsync(StoreEntitySurrogate store, CancellationToken ct)
   {
     var id = this.GetPrimaryKey();
-    var ct = gct.CancellationToken;
     var db = RequestServices.GetRequiredService<SecondServiceDbContext>();
 
     db.Stores.Add(store.ToEntity(id));
@@ -29,10 +28,9 @@ internal class StoreGrain : BaseGrain, IStoreGrain
     return id;
   }
 
-  public async Task<Result> DeleteStoreAsync(GrainCancellationToken gct)
+  public async Task<Result> DeleteStoreAsync(CancellationToken ct)
   {
     var id = this.GetPrimaryKey();
-    var ct = gct.CancellationToken;
     var db = RequestServices.GetRequiredService<SecondServiceDbContext>();
 
     var entity = await db.Stores.FirstOrDefaultAsync(s => s.Id == id, ct);
@@ -52,10 +50,9 @@ internal class StoreGrain : BaseGrain, IStoreGrain
     return Result.Ok();
   }
 
-  public async Task<Result<StoreEntitySurrogate>> GetStoreAsync(GrainCancellationToken gct)
+  public async Task<Result<StoreEntitySurrogate>> GetStoreAsync(CancellationToken ct)
   {
     var id = this.GetPrimaryKey();
-    var ct = gct.CancellationToken;
     var db = RequestServices.GetRequiredService<SecondServiceDbContext>();
 
     //check in-memory
@@ -73,16 +70,15 @@ internal class StoreGrain : BaseGrain, IStoreGrain
     return result;
   }
 
-  public Task<Result> InvalidateStateAsync(GrainCancellationToken gct)
+  public Task<Result> InvalidateStateAsync(CancellationToken ct)
   {
     _cache = null;
     return Task.FromResult(Result.Ok());
   }
 
-  public async Task<Result<StoreEntitySurrogate>> UpdateStoreAsync(StoreEntitySurrogate book, GrainCancellationToken gct)
+  public async Task<Result<StoreEntitySurrogate>> UpdateStoreAsync(StoreEntitySurrogate book, CancellationToken ct)
   {
     var id = this.GetPrimaryKey();
-    var ct = gct.CancellationToken;
     var db = RequestServices.GetRequiredService<SecondServiceDbContext>();
 
     var updated = await db.Stores
