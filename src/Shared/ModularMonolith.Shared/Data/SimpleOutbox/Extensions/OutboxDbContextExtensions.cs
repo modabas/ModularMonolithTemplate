@@ -2,8 +2,6 @@
 using System.Text.Json;
 using ModularMonolith.Shared.Data.SimpleOutbox.Abstractions;
 using ModularMonolith.Shared.Data.SimpleOutbox.Entities;
-using ModularMonolith.Shared.Data.SimpleOutbox.Enums;
-using ModularMonolith.Shared.Guids;
 
 namespace ModularMonolith.Shared.Data.SimpleOutbox.Extensions;
 

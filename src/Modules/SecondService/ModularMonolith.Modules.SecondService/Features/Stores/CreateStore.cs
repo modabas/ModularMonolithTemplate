@@ -7,7 +7,6 @@ using ModularMonolith.Modules.SecondService.FeatureContracts.Features.Stores;
 using ModularMonolith.Modules.SecondService.Features.Stores.Configuration;
 using ModularMonolith.Modules.SecondService.Features.Stores.Orleans;
 using ModularMonolith.Shared.Guids;
-using ModularMonolith.Shared.Orleans;
 
 namespace ModularMonolith.Modules.SecondService.Features.Stores;
 

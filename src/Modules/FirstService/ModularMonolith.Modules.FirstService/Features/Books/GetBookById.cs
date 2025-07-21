@@ -6,7 +6,6 @@ using ModResults;
 using ModularMonolith.Modules.FirstService.FeatureContracts.Features;
 using ModularMonolith.Modules.FirstService.Features.Books.Configuration;
 using ModularMonolith.Modules.FirstService.Features.Books.Orleans;
-using ModularMonolith.Shared.Orleans;
 
 namespace ModularMonolith.Modules.FirstService.Features.Books;
 
