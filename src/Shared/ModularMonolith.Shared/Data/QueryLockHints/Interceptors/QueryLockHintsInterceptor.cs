@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace ModularMonolith.Shared.Data.QueryLockHints.Interceptors;
+
 public class QueryLockHintsInterceptor(bool checkFirstTagOnly) : DbCommandInterceptor()
 {
   private const string LookFor = $"{QueryLockHintsDefinitions.TagPrefix} {QueryLockHintsDefinitions.HintPrefix}";

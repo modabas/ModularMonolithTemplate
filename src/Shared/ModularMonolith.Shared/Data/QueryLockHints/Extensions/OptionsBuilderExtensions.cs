@@ -2,6 +2,7 @@
 using ModularMonolith.Shared.Data.QueryLockHints.Interceptors;
 
 namespace ModularMonolith.Shared.Data.QueryLockHints.Extensions;
+
 public static class OptionsBuilderExtensions
 {
   public static DbContextOptionsBuilder WithQueryLockHints(

@@ -1,6 +1,7 @@
 ﻿using ModularMonolith.Modules.FirstService.Features.Books.Data;
 
 namespace ModularMonolith.Modules.FirstService.Features.Books.Orleans;
+
 internal static class BookExtensions
 {
   public static BookEntity ToEntity(this BookEntitySurrogate state, Guid id)

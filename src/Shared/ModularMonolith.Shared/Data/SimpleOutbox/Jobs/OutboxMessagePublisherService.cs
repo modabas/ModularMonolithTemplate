@@ -9,6 +9,7 @@ using ModularMonolith.Shared.Data.QueryLockHints.Enums;
 using ModularMonolith.Shared.Data.QueryLockHints.Extensions;
 using ModularMonolith.Shared.Data.SimpleOutbox.Abstractions;
 using ModularMonolith.Shared.Data.SimpleOutbox.Enums;
+using ModularMonolith.Shared.Data.SimpleOutbox.Extensions;
 
 namespace ModularMonolith.Shared.Data.SimpleOutbox.Jobs;
 
@@ -27,124 +28,126 @@ public class OutboxMessagePublisherService<TDbContext>(
     {
       while (await timer.WaitForNextTickAsync(cancellationToken))
       {
-        try
+        using (var pollActivity = _activitySource.StartActivity(
+          ActivityKind.Internal,
+          name: $"OutboxMessagePublisherService of {typeof(TDbContext)} Polling"))
         {
-          logger.LogDebug($"{nameof(OutboxMessagePublisherService<TDbContext>)} started iteration");
-
-          using (var scope = serviceScopeFactory.CreateScope())
+          try
           {
-            var dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
-            using (var transactionScope = await dbContext.Database.BeginTransactionAsync(
-              IsolationLevel.ReadCommitted, cancellationToken))
+            using (var scope = serviceScopeFactory.CreateScope())
             {
-              try
+              var dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
+              using (var transactionScope = await dbContext.Database.BeginTransactionAsync(
+                IsolationLevel.ReadCommitted, cancellationToken))
               {
-                var utcNow = DateTimeOffset.UtcNow;
-                var messages = await dbContext.OutboxMessages
-                    .Where(x => x.State == MessageState.New && x.RetryCount <= settings.PublisherRetryCount && x.PublishAt <= utcNow ||
-                      x.State == MessageState.Errored && x.RetryCount <= settings.PublisherRetryCount && x.PublishAt <= utcNow)
-                    .OrderBy(x => x.Id)
-                    .WithQueryLock(QueryLockStrength.Update, QueryLockBehavior.SkipLocked)
-                    .Take(settings.PublisherBatchCount)
-                    .ToListAsync(cancellationToken);
-
-                if (messages.Count == 0)
+                try
                 {
-                  continue;
-                }
+                  var utcNow = DateTimeOffset.UtcNow;
+                  var messages = await dbContext.OutboxMessages
+                      .Where(x => x.State == MessageState.New && x.RetryCount <= settings.PublisherRetryCount && x.PublishAt <= utcNow ||
+                        x.State == MessageState.Errored && x.RetryCount <= settings.PublisherRetryCount && x.PublishAt <= utcNow)
+                      .OrderBy(x => x.Id)
+                      .WithQueryLock(QueryLockStrength.Update, QueryLockBehavior.SkipLocked)
+                      .Take(settings.PublisherBatchCount)
+                      .ToListAsync(cancellationToken);
 
-                var publishedMessageIds = new List<Guid>();
-                var erroredMessageIds = new List<Guid>();
-
-                foreach (var message in messages)
-                {
-                  try
+                  if (messages.Count == 0)
                   {
-                    var traceId = message.TraceId;
-                    var spanId = message.SpanId;
-                    ActivityContext parentContext = default;
-                    if (!string.IsNullOrWhiteSpace(traceId) && !string.IsNullOrWhiteSpace(spanId))
+                    continue;
+                  }
+
+                  var publishedMessageIds = new List<Guid>();
+                  var erroredMessageIds = new List<Guid>();
+
+                  foreach (var message in messages)
+                  {
+                    try
                     {
-                      parentContext = new ActivityContext(
-                        traceId: ActivityTraceId.CreateFromString(traceId),
-                        spanId: ActivitySpanId.CreateFromString(spanId),
-                        traceFlags: ActivityTraceFlags.None);
-                    }
-                    using (var activity = _activitySource.StartActivity(
-                      ActivityKind.Producer,
-                      parentContext: parentContext,
-                      name: "Publishing Outbox Message"))
-                    {
-                      try
+                      var traceId = message.TraceId;
+                      var spanId = message.SpanId;
+                      ActivityContext parentContext = default;
+                      if (!string.IsNullOrWhiteSpace(traceId) && !string.IsNullOrWhiteSpace(spanId))
                       {
-                        var publisherKey = message.PublisherName ?? settings.DefaultPublisherName;
-                        var outboxPublisher = scope.ServiceProvider.GetRequiredKeyedService<IOutboxPublisher>(publisherKey);
-                        using (var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+                        parentContext = new ActivityContext(
+                          traceId: ActivityTraceId.CreateFromString(traceId),
+                          spanId: ActivitySpanId.CreateFromString(spanId),
+                          traceFlags: ActivityTraceFlags.None);
+                      }
+                      using (var activity = _activitySource.StartActivity(
+                        ActivityKind.Producer,
+                        parentContext: parentContext,
+                        name: "Publishing Outbox Message"))
+                      {
+                        try
                         {
-                          cts.CancelAfter(settings.PublisherTimeout);
-
-                          var publishResult = await outboxPublisher.Publish(message, cts.Token);
-
-                          if (publishResult.IsOk)
+                          var publisherKey = message.PublisherName ?? settings.DefaultPublisherName;
+                          var outboxPublisher = scope.ServiceProvider.GetRequiredKeyedService<IOutboxPublisher>(publisherKey);
+                          using (var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
                           {
-                            publishedMessageIds.Add(message.Id);
-                          }
-                          else
-                          {
-                            logger.LogError("Error publishing message with {messageId}: {errorMessages}", message.Id, string.Join(Environment.NewLine, publishResult.Failure.Errors.Select(e => e.Message)));
-                            erroredMessageIds.Add(message.Id);
+                            cts.CancelAfter(settings.PublisherTimeout);
+
+                            var publishResult = await outboxPublisher.Publish(message.ToPublisherMessage(), cts.Token);
+
+                            if (publishResult.IsOk)
+                            {
+                              publishedMessageIds.Add(message.Id);
+                            }
+                            else
+                            {
+                              logger.LogError("Error publishing message with {messageId}: {errorMessages}", message.Id, string.Join(Environment.NewLine, publishResult.Failure.Errors.Select(e => e.Message)));
+                              erroredMessageIds.Add(message.Id);
+                            }
                           }
                         }
-                      }
-                      catch (Exception activityException)
-                      {
-                        logger.LogError(activityException, "Error publishing message with {messageId}", message.Id);
-                        erroredMessageIds.Add(message.Id);
+                        catch (Exception activityException)
+                        {
+                          logger.LogError(activityException, "Error publishing message with {messageId}", message.Id);
+                          erroredMessageIds.Add(message.Id);
+                        }
                       }
                     }
+                    catch (Exception ex)
+                    {
+                      logger.LogError(ex, "Error publishing message with {messageId}", message.Id);
+                      erroredMessageIds.Add(message.Id);
+                    }
                   }
-                  catch (Exception ex)
+                  if (publishedMessageIds.Count > 0)
                   {
-                    logger.LogError(ex, "Error publishing message with {messageId}", message.Id);
-                    erroredMessageIds.Add(message.Id);
+                    utcNow = DateTimeOffset.UtcNow;
+                    await dbContext.OutboxMessages
+                        .Where(b => publishedMessageIds.Contains(b.Id))
+                        .ExecuteUpdateAsync(x => x.SetProperty(m => m.State, MessageState.Done)
+                            .SetProperty(m => m.UpdatedAt, utcNow), cancellationToken: cancellationToken);
                   }
-                }
 
-                if (publishedMessageIds.Count > 0)
-                {
-                  utcNow = DateTimeOffset.UtcNow;
-                  await dbContext.OutboxMessages
-                      .Where(b => publishedMessageIds.Contains(b.Id))
-                      .ExecuteUpdateAsync(x => x.SetProperty(m => m.State, MessageState.Done)
-                          .SetProperty(m => m.UpdatedAt, utcNow), cancellationToken: cancellationToken);
+                  if (erroredMessageIds.Count > 0)
+                  {
+                    utcNow = DateTimeOffset.UtcNow;
+                    var utcRetryAt = utcNow.Add(settings.PublisherRetryInterval);
+                    await dbContext.OutboxMessages
+                        .Where(b => erroredMessageIds.Contains(b.Id))
+                        .ExecuteUpdateAsync(x => x.SetProperty(m => m.State, MessageState.Errored)
+                            .SetProperty(m => m.UpdatedAt, utcNow)
+                            .SetProperty(m => m.RetryCount, m => m.RetryCount + 1)
+                            .SetProperty(m => m.PublishAt, utcRetryAt), cancellationToken: cancellationToken);
+                  }
+                  await dbContext.SaveChangesAsync(cancellationToken);
+                  await transactionScope.CommitAsync(cancellationToken);
                 }
-
-                if (erroredMessageIds.Count > 0)
+                catch (Exception ex)
                 {
-                  utcNow = DateTimeOffset.UtcNow;
-                  var utcRetryAt = utcNow.Add(settings.PublisherRetryInterval);
-                  await dbContext.OutboxMessages
-                      .Where(b => erroredMessageIds.Contains(b.Id))
-                      .ExecuteUpdateAsync(x => x.SetProperty(m => m.State, MessageState.Errored)
-                          .SetProperty(m => m.UpdatedAt, utcNow)
-                          .SetProperty(m => m.RetryCount, m => m.RetryCount + 1)
-                          .SetProperty(m => m.PublishAt, utcRetryAt), cancellationToken: cancellationToken);
+                  logger.LogError(ex, "Error processing publish batch.");
+                  await transactionScope.RollbackAsync(cancellationToken);
                 }
-                await dbContext.SaveChangesAsync(cancellationToken);
-                await transactionScope.CommitAsync(cancellationToken);
-              }
-              catch (Exception ex)
-              {
-                logger.LogError(ex, "Error processing publish batch.");
-                await transactionScope.RollbackAsync(cancellationToken);
               }
             }
+            logger.LogDebug($"{nameof(OutboxMessagePublisherService<TDbContext>)} finished iteration");
           }
-          logger.LogDebug($"{nameof(OutboxMessagePublisherService<TDbContext>)} finished iteration");
-        }
-        catch (Exception ex)
-        {
-          logger.LogError(ex, "Error outbox publish loop.");
+          catch (Exception ex)
+          {
+            logger.LogError(ex, "Error outbox publish loop.");
+          }
         }
       }
     }

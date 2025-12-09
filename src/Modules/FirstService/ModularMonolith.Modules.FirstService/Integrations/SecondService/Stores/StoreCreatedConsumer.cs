@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using ModularMonolith.Shared.IntegrationContracts.SecondService.Stores;
 
 namespace ModularMonolith.Modules.FirstService.Integrations.SecondService.Stores;
+
 internal class StoreCreatedConsumer(ILogger<StoreCreatedConsumer> logger)
   : IConsumer<StoreCreatedEvent>
 {

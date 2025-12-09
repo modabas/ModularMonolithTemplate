@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 
 namespace ModularMonolith.Shared.MinimalApis.ServerTimeout;
+
 public class ServerTimeoutFilter : IEndpointFilter
 {
   public async ValueTask<object?> InvokeAsync(

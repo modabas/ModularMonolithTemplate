@@ -1,4 +1,5 @@
 ﻿namespace ModularMonolith.Shared.Masstransit;
+
 public class MtOptions
 {
   public string? EndpointNamePrefix { get; set; }

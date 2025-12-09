@@ -1,6 +1,7 @@
 ﻿using ModularMonolith.Shared.Data;
 
 namespace ModularMonolith.Modules.FirstService.Features.Books.Data;
+
 internal class BookEntity : BaseEntity
 {
   public string Title { get; set; } = string.Empty;

@@ -38,11 +38,23 @@ public static class WebApplicationBuilderExtensions
     {
       logging.IncludeFormattedMessage = true;
       logging.IncludeScopes = true;
+      // Set a service name
+      logging.SetResourceBuilder(
+        ResourceBuilder.CreateDefault()
+          .AddService(serviceName: serviceName, serviceVersion: serviceVersion)
+          .AddAttributes(otelAttributes)
+          .AddTelemetrySdk());
     });
 
     builder.Services.AddOpenTelemetry()
       .WithMetrics(metrics =>
       {
+        // Set a service name
+        metrics.SetResourceBuilder(
+          ResourceBuilder.CreateDefault()
+            .AddService(serviceName: serviceName, serviceVersion: serviceVersion)
+            .AddAttributes(otelAttributes)
+            .AddTelemetrySdk());
         metrics.AddRuntimeInstrumentation()
             .AddMeter("Microsoft.AspNetCore.Hosting", "Microsoft.AspNetCore.Server.Kestrel", "System.Net.Http")
             .AddMeter("Microsoft.Orleans");

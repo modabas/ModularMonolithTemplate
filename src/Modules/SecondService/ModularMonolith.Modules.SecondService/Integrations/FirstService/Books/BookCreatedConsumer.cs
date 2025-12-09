@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using ModularMonolith.Shared.IntegrationContracts.FirstService.Books;
 
 namespace ModularMonolith.Modules.SecondService.Integrations.FirstService.Books;
+
 internal class BookCreatedConsumer(ILogger<BookCreatedConsumer> logger)
   : IConsumer<BookCreatedEvent>
 {

@@ -2,6 +2,7 @@
 using ModularMonolith.Shared.Data.QueryLockHints.Enums;
 
 namespace ModularMonolith.Shared.Data.QueryLockHints.Extensions;
+
 public static class QueryableExtensions
 {
   public static IQueryable<T> WithQueryLock<T>(this IQueryable<T> query, QueryLockStrength lockStrength, QueryLockBehavior lockBehavior = QueryLockBehavior.None)

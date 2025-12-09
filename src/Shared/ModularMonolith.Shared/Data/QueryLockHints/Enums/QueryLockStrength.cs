@@ -1,4 +1,5 @@
 ﻿namespace ModularMonolith.Shared.Data.QueryLockHints.Enums;
+
 public enum QueryLockStrength
 {
   Update = 1,

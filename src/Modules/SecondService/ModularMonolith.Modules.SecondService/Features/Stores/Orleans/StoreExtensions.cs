@@ -1,6 +1,7 @@
 ﻿using ModularMonolith.Modules.SecondService.Features.Stores.Data;
 
 namespace ModularMonolith.Modules.SecondService.Features.Stores.Orleans;
+
 internal static class StoreExtensions
 {
   public static StoreEntity ToEntity(this StoreEntitySurrogate state, Guid id)

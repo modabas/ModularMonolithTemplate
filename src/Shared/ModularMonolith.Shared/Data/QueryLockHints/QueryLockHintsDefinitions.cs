@@ -1,4 +1,5 @@
 ﻿namespace ModularMonolith.Shared.Data.QueryLockHints;
+
 public class QueryLockHintsDefinitions
 {
   public const string TagPrefix = "--";

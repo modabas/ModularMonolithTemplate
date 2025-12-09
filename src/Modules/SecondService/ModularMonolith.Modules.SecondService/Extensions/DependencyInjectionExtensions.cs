@@ -13,6 +13,7 @@ using ModularMonolith.Shared.Data.SimpleOutbox.Extensions;
 using Npgsql;
 
 namespace ModularMonolith.Modules.SecondService.Extensions;
+
 internal static class DependencyInjectionExtensions
 {
   public static WebApplicationBuilder AddSecondServiceModule(this WebApplicationBuilder builder)

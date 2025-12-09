@@ -31,4 +31,21 @@ public static class OutboxDbContextExtensions
 
     return entity;
   }
+
+  public static PublisherMessage ToPublisherMessage(this OutboxMessageEntity entity)
+  {
+    return new PublisherMessage(
+      Id: entity.Id,
+      State: entity.State,
+      PublisherName: entity.PublisherName,
+      TraceId: entity.TraceId,
+      SpanId: entity.SpanId,
+      Payload: entity.Payload,
+      Headers: entity.Headers,
+      Type: entity.Type,
+      RetryCount: entity.RetryCount,
+      CreatedAt: entity.CreatedAt,
+      UpdatedAt: entity.UpdatedAt,
+      PublishAt: entity.PublishAt);
+  }
 }
