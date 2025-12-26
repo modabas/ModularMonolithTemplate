@@ -27,13 +27,13 @@ internal class GetBookById(IGrainFactory grainFactory)
 
   protected override void Configure(
     EndpointConfigurationBuilder builder,
-    ConfigurationContext<EndpointConfigurationParameters> configurationContext)
+    EndpointConfigurationContext configurationContext)
   {
     builder.MapGet(Pattern)
       .Produces<GetBookByIdResponse>();
   }
 
-  protected override async Task<Result<GetBookByIdResponse>> HandleAsync(
+  protected override async Task<WebResult<GetBookByIdResponse>> HandleAsync(
     GetBookByIdRequest req,
     CancellationToken ct)
   {

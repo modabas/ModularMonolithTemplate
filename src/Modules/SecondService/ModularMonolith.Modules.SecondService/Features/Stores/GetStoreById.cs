@@ -26,7 +26,7 @@ internal class GetStoreById(IGrainFactory grainFactory)
 
   protected override void Configure(
     EndpointConfigurationBuilder builder,
-    ConfigurationContext<EndpointConfigurationParameters> configurationContext)
+    EndpointConfigurationContext configurationContext)
   {
     builder.MapGet(Pattern);
   }

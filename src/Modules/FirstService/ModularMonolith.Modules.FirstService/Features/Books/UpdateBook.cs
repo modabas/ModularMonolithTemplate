@@ -32,13 +32,13 @@ internal class UpdateBook(IGrainFactory grainFactory)
 
   protected override void Configure(
     EndpointConfigurationBuilder builder,
-    ConfigurationContext<EndpointConfigurationParameters> configurationContext)
+    EndpointConfigurationContext configurationContext)
   {
     builder.MapPut(Pattern)
       .Produces<UpdateBookResponse>();
   }
 
-  protected override async Task<Result<UpdateBookResponse>> HandleAsync(
+  protected override async Task<WebResult<UpdateBookResponse>> HandleAsync(
     UpdateBookRequest req,
     CancellationToken ct)
   {

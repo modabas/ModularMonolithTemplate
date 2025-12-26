@@ -24,19 +24,19 @@ internal class CreateBookRequestValidator : AbstractValidator<CreateBookRequest>
 }
 
 [MapToGroup<BooksV1RouteGroup>()]
-internal class CreateBook(IGrainFactory grainFactory, ILocationStore location)
+internal class CreateBook(IGrainFactory grainFactory)
   : WebResultEndpoint<CreateBookRequest, CreateBookResponse>
 {
   private const string Pattern = "/";
 
   protected override void Configure(
     EndpointConfigurationBuilder builder,
-    ConfigurationContext<EndpointConfigurationParameters> configurationContext)
+    EndpointConfigurationContext configurationContext)
   {
     builder.MapPost(Pattern)
       .Produces<CreateBookResponse>(StatusCodes.Status201Created);
   }
-  protected override async Task<Result<CreateBookResponse>> HandleAsync(
+  protected override async Task<WebResult<CreateBookResponse>> HandleAsync(
     CreateBookRequest req,
     CancellationToken ct)
   {
@@ -48,16 +48,9 @@ internal class CreateBook(IGrainFactory grainFactory, ILocationStore location)
     var id = GuidV7.CreateVersion7();
 
     var result = await grainFactory.GetGrain<IBookGrain>(id).CreateBookAsync(book, ct);
-    return await result.ToResultAsync(
-      async (id, state, ct) =>
-      {
-        await state.Location.SetValueAsync(
-          typeof(GetBookById).FullName,
-          new { id = id },
-          ct);
-        return new CreateBookResponse(id);
-      },
-      new { Location = location },
-      ct);
+    return WebResults.WithLocationRouteOnSuccess(
+      result.ToResult(v => new CreateBookResponse(v)),
+      typeof(GetBookById).FullName,
+      new { id = id });
   }
 }

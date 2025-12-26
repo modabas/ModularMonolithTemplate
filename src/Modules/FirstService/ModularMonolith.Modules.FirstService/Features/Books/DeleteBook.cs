@@ -26,14 +26,14 @@ internal class DeleteBook(IGrainFactory grainFactory)
 
   protected override void Configure(
     EndpointConfigurationBuilder builder,
-    ConfigurationContext<EndpointConfigurationParameters> configurationContext)
+    EndpointConfigurationContext configurationContext)
   {
     builder.MapDelete(Pattern)
       .Produces(StatusCodes.Status204NoContent);
   }
 
-  protected override async Task<Result> HandleAsync(
-  DeleteBookRequest req,
+  protected override async Task<WebResult> HandleAsync(
+    DeleteBookRequest req,
     CancellationToken ct)
   {
     var result = await grainFactory.GetGrain<IBookGrain>(req.Id).DeleteBookAsync(ct);

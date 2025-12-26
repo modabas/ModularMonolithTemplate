@@ -49,7 +49,10 @@ app.MapModEndpoints(
         builder.WithName($"{endpointFullName}_{discriminator}");
       }
     }
-    builder.WithServerTimeout(configurationContext.ServiceProvider, endpoint)
+    builder
+      .WithServerTimeout(
+        configurationContext.ConfigurationServices,
+        endpoint)
       .AddEndpointFilter<ServerTimeoutFilter>();
   });
 

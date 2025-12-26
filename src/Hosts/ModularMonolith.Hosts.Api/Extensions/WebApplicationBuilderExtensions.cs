@@ -3,7 +3,7 @@ using MassTransit;
 using MassTransit.Logging;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Options;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using ModularMonolith.Hosts.Api.ApiVersioning;
 using ModularMonolith.Modules.FirstService.Extensions;
 using ModularMonolith.Modules.SecondService.Extensions;
@@ -117,22 +117,15 @@ public static class WebApplicationBuilderExtensions
         Description = "Bearer Authentication with JWT Token",
         Type = SecuritySchemeType.Http
       });
-      options.AddSecurityRequirement(new OpenApiSecurityRequirement()
+      options.AddSecurityRequirement((document) => new OpenApiSecurityRequirement()
       {
         {
-          new OpenApiSecurityScheme()
-          {
-            Reference = new OpenApiReference()
-            {
-                Id = "Bearer",
-                Type = ReferenceType.SecurityScheme
-            }
-          },
+          new OpenApiSecuritySchemeReference("Bearer", document),
           new List<string>()
         }
       });
+
       options.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
-      options.OperationFilter<SwaggerDefaultValues>();
       options.CustomSchemaIds(type => type.ToString());
     });
     return builder;

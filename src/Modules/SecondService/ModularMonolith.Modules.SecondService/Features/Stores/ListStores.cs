@@ -16,7 +16,7 @@ internal class ListStores(SecondServiceDbContext db)
 
   protected override void Configure(
     EndpointConfigurationBuilder builder,
-    ConfigurationContext<EndpointConfigurationParameters> configurationContext)
+    EndpointConfigurationContext configurationContext)
   {
     builder.MapGet(Pattern);
   }
