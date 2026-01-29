@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ModEndpoints;
 using ModEndpoints.Core;
-using ModResults;
 using ModularMonolith.Modules.FirstService.FeatureContracts.Features;
 using ModularMonolith.Modules.FirstService.Features.Books.Configuration;
 

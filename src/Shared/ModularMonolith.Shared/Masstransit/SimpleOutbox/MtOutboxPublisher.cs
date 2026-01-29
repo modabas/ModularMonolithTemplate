@@ -11,28 +11,24 @@ public class MtOutboxPublisher(IPublishEndpoint publishEndpoint) : IOutboxPublis
 
   public async Task<Result> Publish(PublisherMessage message, CancellationToken cancellationToken)
   {
-    if (string.IsNullOrWhiteSpace(message.Type))
+    if (string.IsNullOrWhiteSpace(message.Content.Type))
     {
-      return Result.Error("message.Type is null or whitespace.");
+      return Result.Error("message.Content.Type is null or whitespace.");
     }
 
-    var type = Type.GetType(message.Type);
+    var type = Type.GetType(message.Content.Type);
     if (type is null)
     {
-      return Result.Error($"Cannot resolve message type from string {message.Type}");
+      return Result.Error($"Cannot resolve message type from string {message.Content.Type}");
     }
 
-    var messageObject = JsonSerializer.Deserialize(message.Payload, type);
+    var messageObject = JsonSerializer.Deserialize(message.Content.Payload, type);
     if (messageObject is null)
     {
-      return Result.Error("message.Payload cannot be deserialized as a message.Type object.");
+      return Result.Error("message.Content.Payload cannot be deserialized as a message.Content.Type object.");
     }
 
-    Dictionary<string, object?>? headers = null;
-    if (message.Headers is not null)
-    {
-      headers = JsonSerializer.Deserialize<Dictionary<string, object?>>(message.Headers);
-    }
+    var headers = message.Content.Headers;
     await publishEndpoint.Publish(messageObject, type,
       x =>
       {

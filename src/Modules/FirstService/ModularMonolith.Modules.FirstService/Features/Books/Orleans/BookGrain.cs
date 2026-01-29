@@ -19,7 +19,11 @@ internal class BookGrain : BaseGrain, IBookGrain
     var db = RequestServices.GetRequiredService<FirstServiceDbContext>();
 
     db.Books.Add(book.ToEntity(id));
-    db.AddToOutbox(new BookCreatedEvent(id, book.Title, book.Author, book.Price));
+    db.AddToOutbox(new BookCreatedEvent(id, book.Title, book.Author, book.Price),
+      headers: new Dictionary<string, object?>()
+      {
+        { "sdsad", 213 }
+      });
     await db.SaveChangesAsync(ct);
 
     //set in-memory

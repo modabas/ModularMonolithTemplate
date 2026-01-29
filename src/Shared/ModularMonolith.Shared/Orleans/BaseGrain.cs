@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Orleans;
 
 namespace ModularMonolith.Shared.Orleans;
 

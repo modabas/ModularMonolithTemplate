@@ -16,13 +16,16 @@ public static class OutboxDbContextExtensions
   {
     var activity = Activity.Current;
     var messageDelay = delay is null ? TimeSpan.Zero : delay;
+    OutboxMessageEntityTelemetryContext? telemetryContext = activity is null
+      ? null
+      : new(TraceId: activity.TraceId.ToString(), SpanId: activity.SpanId.ToString());
     var entity = new OutboxMessageEntity
     {
-      Payload = JsonSerializer.Serialize(message),
-      Type = typeof(T).AssemblyQualifiedName,
-      SpanId = activity?.SpanId.ToString(),
-      TraceId = activity?.TraceId.ToString(),
-      Headers = headers is null ? null : JsonSerializer.Serialize(headers),
+      Content = new OutboxMessageEntityContent(
+        Payload: JsonSerializer.Serialize(message),
+        Type: typeof(T).AssemblyQualifiedName,
+        Headers: headers),
+      TelemetryContext = telemetryContext,
       PublisherName = publisherName,
       PublishAt = DateTimeOffset.UtcNow.Add(messageDelay.Value)
     };
@@ -38,11 +41,15 @@ public static class OutboxDbContextExtensions
       Id: entity.Id,
       State: entity.State,
       PublisherName: entity.PublisherName,
-      TraceId: entity.TraceId,
-      SpanId: entity.SpanId,
-      Payload: entity.Payload,
-      Headers: entity.Headers,
-      Type: entity.Type,
+      TelemetryContext: entity.TelemetryContext is null
+        ? null
+        : new PublisherMessageTelemetryContext(
+          TraceId: entity.TelemetryContext.TraceId,
+          SpanId: entity.TelemetryContext.SpanId),
+      Content: new PublisherMessageContent(
+        Payload: entity.Content.Payload,
+        Headers: entity.Content.Headers,
+        Type: entity.Content.Type),
       RetryCount: entity.RetryCount,
       CreatedAt: entity.CreatedAt,
       UpdatedAt: entity.UpdatedAt,

@@ -63,14 +63,13 @@ public class OutboxMessagePublisherService<TDbContext>(
                   {
                     try
                     {
-                      var traceId = message.TraceId;
-                      var spanId = message.SpanId;
+                      var telemetryContext = message.TelemetryContext;
                       ActivityContext parentContext = default;
-                      if (!string.IsNullOrWhiteSpace(traceId) && !string.IsNullOrWhiteSpace(spanId))
+                      if (telemetryContext is not null)
                       {
                         parentContext = new ActivityContext(
-                          traceId: ActivityTraceId.CreateFromString(traceId),
-                          spanId: ActivitySpanId.CreateFromString(spanId),
+                          traceId: ActivityTraceId.CreateFromString(telemetryContext.TraceId),
+                          spanId: ActivitySpanId.CreateFromString(telemetryContext.SpanId),
                           traceFlags: ActivityTraceFlags.None);
                       }
                       using (var activity = _activitySource.StartActivity(

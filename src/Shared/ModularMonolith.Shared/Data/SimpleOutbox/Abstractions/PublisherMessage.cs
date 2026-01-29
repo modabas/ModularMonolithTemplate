@@ -6,12 +6,14 @@ public record PublisherMessage(
   Guid Id,
   MessageState State,
   string? PublisherName,
-  string? TraceId,
-  string? SpanId,
-  string Payload,
-  string? Headers,
-  string? Type,
+  PublisherMessageTelemetryContext? TelemetryContext,
+  PublisherMessageContent Content,
   int RetryCount,
   DateTimeOffset CreatedAt,
   DateTimeOffset? UpdatedAt,
   DateTimeOffset PublishAt);
+
+public record PublisherMessageTelemetryContext(string? TraceId, string? SpanId);
+
+public record PublisherMessageContent(string Payload, Dictionary<string, object?>? Headers, string? Type);
+
