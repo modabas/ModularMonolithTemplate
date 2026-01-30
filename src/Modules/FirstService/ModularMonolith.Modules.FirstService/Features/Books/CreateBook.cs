@@ -47,9 +47,9 @@ internal class CreateBook(IGrainFactory grainFactory)
 
     var id = GuidV7.CreateVersion7();
 
-    var result = await grainFactory.GetGrain<IBookGrain>(id).CreateBookAsync(book, ct);
+    var result = await grainFactory.GetGrain<IBookGrain>(id.ToString()).SetAndWriteAsync(book, ct);
     return WebResults.WithLocationRouteOnSuccess(
-      result.ToResult(v => new CreateBookResponse(v)),
+      result.ToResult((_, state) => new CreateBookResponse(state.id), new { id }),
       typeof(GetBookById).FullName,
       new { id = id });
   }

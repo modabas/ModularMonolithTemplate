@@ -1,6 +1,7 @@
-﻿using Microsoft.CodeAnalysis;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using ModCaches.Orleans.Abstractions.Cluster;
+using ModCaches.Orleans.Server.Cluster;
 using ModResults;
 using ModularMonolith.Modules.FirstService.Data;
 using ModularMonolith.Shared.Data.SimpleOutbox.Extensions;
@@ -9,99 +10,85 @@ using ModularMonolith.Shared.Orleans;
 
 namespace ModularMonolith.Modules.FirstService.Features.Books.Orleans;
 
-internal class BookGrain : BaseGrain, IBookGrain
+internal class BookGrain : VolatileCacheGrain<BookEntitySurrogate>, IBookGrain
 {
-  private BookEntitySurrogate? _cache;
-
-  public async Task<Result<Guid>> CreateBookAsync(BookEntitySurrogate book, CancellationToken ct)
+  public BookGrain(IServiceProvider serviceProvider) : base(serviceProvider)
   {
-    var id = this.GetPrimaryKey();
-    var db = RequestServices.GetRequiredService<FirstServiceDbContext>();
-
-    db.Books.Add(book.ToEntity(id));
-    db.AddToOutbox(new BookCreatedEvent(id, book.Title, book.Author, book.Price),
-      headers: new Dictionary<string, object?>()
-      {
-        { "sdsad", 213 }
-      });
-    await db.SaveChangesAsync(ct);
-
-    //set in-memory
-    _cache = book;
-
-    return id;
   }
 
-  public async Task<Result> DeleteBookAsync(CancellationToken ct)
+  protected override async Task<Result<CreateRecord<BookEntitySurrogate>>> CreateFromStoreAsync(
+    CacheGrainEntryOptions options,
+    CancellationToken ct)
   {
-    var id = this.GetPrimaryKey();
+    var idResult = this.GetPrimaryKeyAsGuid();
+    if (idResult.IsFailed)
+    {
+      return Result<CreateRecord<BookEntitySurrogate>>.Fail(idResult);
+    }
+    var id = idResult.Value;
     var db = RequestServices.GetRequiredService<FirstServiceDbContext>();
 
     var entity = await db.Books.FirstOrDefaultAsync(b => b.Id == id, ct);
     if (entity is null)
     {
-      //set in-memory
-      _cache = null;
-      return Result.NotFound();
+      return Result<CreateRecord<BookEntitySurrogate>>.NotFound($"Book with id: {id} not found.");
     }
-    db.Remove(entity);
-    db.AddToOutbox(new BookDeletedEvent(id));
-    await db.SaveChangesAsync(ct);
+    return new CreateRecord<BookEntitySurrogate>(entity.ToSurrogate(), options);
+  }
 
-    //set in-memory
-    _cache = null;
+  protected override async Task<Result> DeleteFromStoreAsync(CancellationToken ct)
+  {
+    var idResult = this.GetPrimaryKeyAsGuid();
+    if (idResult.IsFailed)
+    {
+      return idResult;
+    }
+    var id = idResult.Value;
+    var db = RequestServices.GetRequiredService<FirstServiceDbContext>();
 
+    using (var transaction = await db.Database.BeginTransactionAsync(ct))
+    {
+      var deleted = await db.Books
+        .Where(b => b.Id == id)
+        .ExecuteDeleteAsync(ct);
+      if (deleted > 0)
+      {
+        db.AddToOutbox(new BookDeletedEvent(id));
+        await db.SaveChangesAsync(ct);
+      }
+      await transaction.CommitAsync(ct);
+    }
     return Result.Ok();
   }
 
-  public async Task<Result<BookEntitySurrogate>> GetBookAsync(CancellationToken ct)
+  protected override async Task<Result<WriteRecord<BookEntitySurrogate>>> WriteToStoreAsync(
+    BookEntitySurrogate value,
+    CacheGrainEntryOptions options,
+    CancellationToken ct)
   {
-    var id = this.GetPrimaryKey();
-    var db = RequestServices.GetRequiredService<FirstServiceDbContext>();
-
-    //check in-memory
-    if (_cache is null)
+    var idResult = this.GetPrimaryKeyAsGuid();
+    if (idResult.IsFailed)
     {
-      var entity = await db.Books.FirstOrDefaultAsync(b => b.Id == id, ct);
-
-      //set in-memory
-      _cache = entity?.ToSurrogate();
+      return Result<WriteRecord<BookEntitySurrogate>>.Fail(idResult);
     }
-
-    var result = _cache is null ?
-      Result<BookEntitySurrogate>.NotFound(string.Format("Book with id: {0} not found.", id)) :
-      _cache;
-    return result;
-  }
-
-  public Task<Result> InvalidateStateAsync(CancellationToken ct)
-  {
-    _cache = null;
-    return Task.FromResult(Result.Ok());
-  }
-
-  public async Task<Result<BookEntitySurrogate>> UpdateBookAsync(BookEntitySurrogate book, CancellationToken ct)
-  {
-    var id = this.GetPrimaryKey();
+    var id = idResult.Value;
     var db = RequestServices.GetRequiredService<FirstServiceDbContext>();
 
     var updated = await db.Books
       .Where(b => b.Id == id)
       .ExecuteUpdateAsync(setters => setters
-        .SetProperty(b => b.Title, book.Title)
-        .SetProperty(b => b.Author, book.Author)
-        .SetProperty(b => b.Price, book.Price),
+        .SetProperty(b => b.Title, value.Title)
+        .SetProperty(b => b.Author, value.Author)
+        .SetProperty(b => b.Price, value.Price),
       ct);
 
-    if (updated > 0)
+    // If no rows were updated, the entity does not exist, so we insert it
+    if (updated < 1)
     {
-      //set in-memory
-      _cache = book;
-      return book;
+      db.Books.Add(value.ToEntity(id));
+      db.AddToOutbox(new BookCreatedEvent(id, value.Title, value.Author, value.Price));
+      await db.SaveChangesAsync(ct);
     }
-    else
-    {
-      return Result<BookEntitySurrogate>.NotFound();
-    }
+    return new WriteRecord<BookEntitySurrogate>(value, options);
   }
 }

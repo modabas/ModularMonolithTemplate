@@ -35,7 +35,7 @@ internal class GetStoreById(IGrainFactory grainFactory)
     GetStoreByIdRequest req,
     CancellationToken ct)
   {
-    var result = await grainFactory.GetGrain<IStoreGrain>(req.Id).GetStoreAsync(ct);
+    var result = await grainFactory.GetGrain<IStoreGrain>(req.Id.ToString()).GetOrCreateAsync(ct);
     return result.ToResult(
       book => new GetStoreByIdResponse(
         Id: req.Id,

@@ -37,7 +37,7 @@ internal class GetBookById(IGrainFactory grainFactory)
     GetBookByIdRequest req,
     CancellationToken ct)
   {
-    var result = await grainFactory.GetGrain<IBookGrain>(req.Id).GetBookAsync(ct);
+    var result = await grainFactory.GetGrain<IBookGrain>(req.Id.ToString()).GetOrCreateAsync(ct);
     return result.ToResult(
       book => new GetBookByIdResponse(
         Id: req.Id,

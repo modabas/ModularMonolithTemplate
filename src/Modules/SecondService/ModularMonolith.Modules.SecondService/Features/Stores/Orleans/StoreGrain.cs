@@ -1,6 +1,7 @@
-﻿using Microsoft.CodeAnalysis;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using ModCaches.Orleans.Abstractions.Cluster;
+using ModCaches.Orleans.Server.Cluster;
 using ModResults;
 using ModularMonolith.Modules.SecondService.Data;
 using ModularMonolith.Shared.Data.SimpleOutbox.Extensions;
@@ -9,93 +10,83 @@ using ModularMonolith.Shared.Orleans;
 
 namespace ModularMonolith.Modules.SecondService.Features.Stores.Orleans;
 
-internal class StoreGrain : BaseGrain, IStoreGrain
+internal class StoreGrain : VolatileCacheGrain<StoreEntitySurrogate>, IStoreGrain
 {
-  private StoreEntitySurrogate? _cache;
-
-  public async Task<Result<Guid>> CreateStoreAsync(StoreEntitySurrogate store, CancellationToken ct)
+  public StoreGrain(IServiceProvider serviceProvider) : base(serviceProvider)
   {
-    var id = this.GetPrimaryKey();
-    var db = RequestServices.GetRequiredService<SecondServiceDbContext>();
-
-    db.Stores.Add(store.ToEntity(id));
-    db.AddToOutbox(new StoreCreatedEvent(id, store.Name));
-    await db.SaveChangesAsync(ct);
-
-    //set in-memory
-    _cache = store;
-
-    return id;
   }
 
-  public async Task<Result> DeleteStoreAsync(CancellationToken ct)
+  protected override async Task<Result<CreateRecord<StoreEntitySurrogate>>> CreateFromStoreAsync(
+    CacheGrainEntryOptions options,
+    CancellationToken ct)
   {
-    var id = this.GetPrimaryKey();
+    var idResult = this.GetPrimaryKeyAsGuid();
+    if (idResult.IsFailed)
+    {
+      return Result<CreateRecord<StoreEntitySurrogate>>.Fail(idResult);
+    }
+    var id = idResult.Value;
     var db = RequestServices.GetRequiredService<SecondServiceDbContext>();
 
-    var entity = await db.Stores.FirstOrDefaultAsync(s => s.Id == id, ct);
+    var entity = await db.Stores.FirstOrDefaultAsync(b => b.Id == id, ct);
     if (entity is null)
     {
-      //set in-memory
-      _cache = null;
-      return Result.NotFound();
+      return Result<CreateRecord<StoreEntitySurrogate>>.NotFound($"Store with id: {id} not found.");
     }
-    db.Remove(entity);
-    db.AddToOutbox(new StoreDeletedEvent(id));
-    await db.SaveChangesAsync(ct);
+    return new CreateRecord<StoreEntitySurrogate>(entity.ToSurrogate(), options);
+  }
 
-    //set in-memory
-    _cache = null;
+  protected override async Task<Result> DeleteFromStoreAsync(CancellationToken ct)
+  {
+    var idResult = this.GetPrimaryKeyAsGuid();
+    if (idResult.IsFailed)
+    {
+      return idResult;
+    }
+    var id = idResult.Value;
+    var db = RequestServices.GetRequiredService<SecondServiceDbContext>();
 
+    using (var transaction = await db.Database.BeginTransactionAsync(ct))
+    {
+      var deleted = await db.Stores
+        .Where(b => b.Id == id)
+        .ExecuteDeleteAsync(ct);
+      if (deleted > 0)
+      {
+        db.AddToOutbox(new StoreDeletedEvent(id));
+        await db.SaveChangesAsync(ct);
+      }
+      await transaction.CommitAsync(ct);
+    }
     return Result.Ok();
   }
 
-  public async Task<Result<StoreEntitySurrogate>> GetStoreAsync(CancellationToken ct)
+  protected override async Task<Result<WriteRecord<StoreEntitySurrogate>>> WriteToStoreAsync(
+    StoreEntitySurrogate value,
+    CacheGrainEntryOptions options,
+    CancellationToken ct)
   {
-    var id = this.GetPrimaryKey();
-    var db = RequestServices.GetRequiredService<SecondServiceDbContext>();
-
-    //check in-memory
-    if (_cache is null)
+    var idResult = this.GetPrimaryKeyAsGuid();
+    if (idResult.IsFailed)
     {
-      var entity = await db.Stores.FirstOrDefaultAsync(s => s.Id == id, ct);
-
-      //set in-memory
-      _cache = entity?.ToSurrogate();
+      return Result<WriteRecord<StoreEntitySurrogate>>.Fail(idResult);
     }
-
-    var result = _cache is null ?
-      Result<StoreEntitySurrogate>.NotFound(string.Format("Store with id: {0} not found.", id)) :
-      _cache;
-    return result;
-  }
-
-  public Task<Result> InvalidateStateAsync(CancellationToken ct)
-  {
-    _cache = null;
-    return Task.FromResult(Result.Ok());
-  }
-
-  public async Task<Result<StoreEntitySurrogate>> UpdateStoreAsync(StoreEntitySurrogate book, CancellationToken ct)
-  {
-    var id = this.GetPrimaryKey();
+    var id = idResult.Value;
     var db = RequestServices.GetRequiredService<SecondServiceDbContext>();
 
     var updated = await db.Stores
       .Where(b => b.Id == id)
       .ExecuteUpdateAsync(setters => setters
-        .SetProperty(b => b.Name, book.Name),
+        .SetProperty(b => b.Name, value.Name),
       ct);
 
-    if (updated > 0)
+    // If no rows were updated, the entity does not exist, so we insert it
+    if (updated < 1)
     {
-      //set in-memory
-      _cache = book;
-      return book;
+      db.Stores.Add(value.ToEntity(id));
+      db.AddToOutbox(new StoreCreatedEvent(id, value.Name));
+      await db.SaveChangesAsync(ct);
     }
-    else
-    {
-      return Result<StoreEntitySurrogate>.NotFound();
-    }
+    return new WriteRecord<StoreEntitySurrogate>(value, options);
   }
 }

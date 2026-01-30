@@ -41,8 +41,8 @@ internal class CreateStore(IGrainFactory grainFactory)
       Name: req.Body.Name);
     var id = GuidV7.CreateVersion7();
 
-    var result = await grainFactory.GetGrain<IStoreGrain>(id).CreateStoreAsync(store, ct);
-    return result.ToResult(id => new CreateStoreResponse(id));
+    var result = await grainFactory.GetGrain<IStoreGrain>(id.ToString()).SetAndWriteAsync(store, ct);
+    return result.ToResult((_, state) => new CreateStoreResponse(state.id), new { id });
   }
 }
 

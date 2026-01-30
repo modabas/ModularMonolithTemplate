@@ -37,10 +37,16 @@ internal class UpdateStore(IGrainFactory grainFactory)
     UpdateStoreRequest req,
     CancellationToken ct)
   {
+    var getResult = await grainFactory.GetGrain<IStoreGrain>(req.Id.ToString()).GetOrCreateAsync(ct);
+    if (getResult.IsFailed)
+    {
+      return Result<UpdateStoreResponse>.Fail(getResult);
+    }
+
     var store = new StoreEntitySurrogate(
       Name: req.Body.Name);
 
-    var result = await grainFactory.GetGrain<IStoreGrain>(req.Id).UpdateStoreAsync(store, ct);
+    var result = await grainFactory.GetGrain<IStoreGrain>(req.Id.ToString()).SetAndWriteAsync(store, ct);
     return result.ToResult(
       book => new UpdateStoreResponse(
         Id: req.Id,

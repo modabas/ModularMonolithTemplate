@@ -4,6 +4,7 @@ using MassTransit.Logging;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
+using ModCaches.Orleans.Server.Cluster;
 using ModularMonolith.Hosts.Api.ApiVersioning;
 using ModularMonolith.Modules.FirstService.Extensions;
 using ModularMonolith.Modules.SecondService.Extensions;
@@ -201,6 +202,12 @@ public static class WebApplicationBuilderExtensions
 
   public static WebApplicationBuilder AddOrleans(this WebApplicationBuilder builder)
   {
+    builder.Services.AddOrleansClusterCache(options =>
+    {
+      options.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10);
+      options.SlidingExpiration = TimeSpan.FromMinutes(1);
+    });
+
     builder.Host.UseOrleans(siloBuilder =>
     {
       siloBuilder.UseLocalhostClustering();
