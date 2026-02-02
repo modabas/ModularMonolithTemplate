@@ -3,11 +3,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ModEndpoints;
 using ModEndpoints.Core;
-using ModResults;
+using ModularMonolith.Modules.FirstService.Data;
 using ModularMonolith.Modules.FirstService.FeatureContracts.Features;
 using ModularMonolith.Modules.FirstService.Features.Books.Configuration;
 using ModularMonolith.Modules.FirstService.Features.Books.Orleans;
+using ModularMonolith.Shared.Data.SimpleOutbox.Extensions;
 using ModularMonolith.Shared.Guids;
+using ModularMonolith.Shared.IntegrationContracts.FirstService.Books;
 
 namespace ModularMonolith.Modules.FirstService.Features.Books;
 
@@ -24,7 +26,8 @@ internal class CreateBookRequestValidator : AbstractValidator<CreateBookRequest>
 }
 
 [MapToGroup<BooksV1RouteGroup>()]
-internal class CreateBook(IGrainFactory grainFactory)
+internal class CreateBook(
+  FirstServiceDbContext db)
   : WebResultEndpoint<CreateBookRequest, CreateBookResponse>
 {
   private const string Pattern = "/";
@@ -47,9 +50,12 @@ internal class CreateBook(IGrainFactory grainFactory)
 
     var id = GuidV7.CreateVersion7();
 
-    var result = await grainFactory.GetGrain<IBookGrain>(id.ToString()).SetAndWriteAsync(book, ct);
+    db.Books.Add(book.ToEntity(id));
+    db.AddToOutbox(new BookCreatedEvent(id, book.Title, book.Author, book.Price));
+    await db.SaveChangesAsync(ct);
+
     return WebResults.WithLocationRouteOnSuccess(
-      result.ToResult((_, state) => new CreateBookResponse(state.id), new { id }),
+      new CreateBookResponse(id),
       typeof(GetBookById).FullName,
       new { id = id });
   }

@@ -80,12 +80,10 @@ internal class StoreGrain : VolatileCacheGrain<StoreEntitySurrogate>, IStoreGrai
         .SetProperty(b => b.Name, value.Name),
       ct);
 
-    // If no rows were updated, the entity does not exist, so we insert it
+    // If no rows were updated, the entity does not exist, return NotFound
     if (updated < 1)
     {
-      db.Stores.Add(value.ToEntity(id));
-      db.AddToOutbox(new StoreCreatedEvent(id, value.Name));
-      await db.SaveChangesAsync(ct);
+      return Result<WriteRecord<StoreEntitySurrogate>>.NotFound($"Store with id: {id} not found.");
     }
     return new WriteRecord<StoreEntitySurrogate>(value, options);
   }

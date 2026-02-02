@@ -3,10 +3,13 @@ using Microsoft.AspNetCore.Mvc;
 using ModEndpoints;
 using ModEndpoints.Core;
 using ModResults;
+using ModularMonolith.Modules.SecondService.Data;
 using ModularMonolith.Modules.SecondService.FeatureContracts.Features.Stores;
 using ModularMonolith.Modules.SecondService.Features.Stores.Configuration;
 using ModularMonolith.Modules.SecondService.Features.Stores.Orleans;
+using ModularMonolith.Shared.Data.SimpleOutbox.Extensions;
 using ModularMonolith.Shared.Guids;
+using ModularMonolith.Shared.IntegrationContracts.SecondService.Stores;
 
 namespace ModularMonolith.Modules.SecondService.Features.Stores;
 
@@ -21,7 +24,7 @@ internal class CreateStoreRequestValidator : AbstractValidator<CreateStoreReques
 }
 
 [MapToGroup<StoresRouteGroup>()]
-internal class CreateStore(IGrainFactory grainFactory)
+internal class CreateStore(SecondServiceDbContext db)
   : BusinessResultEndpoint<CreateStoreRequest, CreateStoreResponse>
 {
   private const string Pattern = "/";
@@ -41,8 +44,11 @@ internal class CreateStore(IGrainFactory grainFactory)
       Name: req.Body.Name);
     var id = GuidV7.CreateVersion7();
 
-    var result = await grainFactory.GetGrain<IStoreGrain>(id.ToString()).SetAndWriteAsync(store, ct);
-    return result.ToResult((_, state) => new CreateStoreResponse(state.id), new { id });
+    db.Stores.Add(store.ToEntity(id));
+    db.AddToOutbox(new StoreCreatedEvent(id, store.Name));
+    await db.SaveChangesAsync(ct);
+
+    return new CreateStoreResponse(id);
   }
 }
 

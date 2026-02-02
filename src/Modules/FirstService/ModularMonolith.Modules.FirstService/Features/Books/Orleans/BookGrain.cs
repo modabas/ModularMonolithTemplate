@@ -82,12 +82,10 @@ internal class BookGrain : VolatileCacheGrain<BookEntitySurrogate>, IBookGrain
         .SetProperty(b => b.Price, value.Price),
       ct);
 
-    // If no rows were updated, the entity does not exist, so we insert it
+    // If no rows were updated, the entity does not exist, return NotFound
     if (updated < 1)
     {
-      db.Books.Add(value.ToEntity(id));
-      db.AddToOutbox(new BookCreatedEvent(id, value.Title, value.Author, value.Price));
-      await db.SaveChangesAsync(ct);
+      return Result<WriteRecord<BookEntitySurrogate>>.NotFound($"Book with id: {id} not found.");
     }
     return new WriteRecord<BookEntitySurrogate>(value, options);
   }
