@@ -1,4 +1,6 @@
 ﻿using FluentValidation;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using ModEndpoints;
 using ModEndpoints.Core;
 using ModResults;
@@ -19,7 +21,7 @@ internal class DeleteStoreRequestValidator : AbstractValidator<DeleteStoreReques
 
 [MapToGroup<StoresRouteGroup>()]
 internal class DeleteStore(IGrainFactory grainFactory)
-  : BusinessResultEndpoint<DeleteStoreRequest>
+  : MinimalEndpoint<DeleteStoreRequest, Results<NoContent, ValidationProblem, ProblemHttpResult>>
 {
   private const string Pattern = "/{Id}";
 
@@ -30,11 +32,11 @@ internal class DeleteStore(IGrainFactory grainFactory)
     builder.MapDelete(Pattern);
   }
 
-  protected override async Task<Result> HandleAsync(
+  protected override async Task<Results<NoContent, ValidationProblem, ProblemHttpResult>> HandleAsync(
     DeleteStoreRequest req,
     CancellationToken ct)
   {
     var result = await grainFactory.GetGrain<IStoreGrain>(req.Id.ToString()).RemoveAndDeleteAsync(ct);
-    return result;
+    return result.Map<Results<NoContent, ValidationProblem, ProblemHttpResult>>(_ => TypedResults.NoContent(), r => TypedResults.Problem(r));
   }
 }

@@ -1,8 +1,9 @@
 ﻿using FluentValidation;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using ModEndpoints;
 using ModEndpoints.Core;
-using ModResults;
 using ModularMonolith.Modules.SecondService.FeatureContracts.Features.Stores;
 using ModularMonolith.Modules.SecondService.Features.Stores.Configuration;
 using ModularMonolith.Modules.SecondService.Features.Stores.Orleans;
@@ -22,7 +23,7 @@ internal class UpdateStoreRequestValidator : AbstractValidator<UpdateStoreReques
 
 [MapToGroup<StoresRouteGroup>()]
 internal class UpdateStore(IGrainFactory grainFactory)
-  : BusinessResultEndpoint<UpdateStoreRequest, UpdateStoreResponse>
+  : MinimalEndpoint<UpdateStoreRequest, Results<Ok<UpdateStoreResponse>, ValidationProblem, NotFound, ProblemHttpResult>>
 {
   private const string Pattern = "/{Id}";
 
@@ -33,23 +34,26 @@ internal class UpdateStore(IGrainFactory grainFactory)
     builder.MapPut(Pattern);
   }
 
-  protected override async Task<Result<UpdateStoreResponse>> HandleAsync(
+  protected override async Task<Results<Ok<UpdateStoreResponse>, ValidationProblem, NotFound, ProblemHttpResult>> HandleAsync(
     UpdateStoreRequest req,
     CancellationToken ct)
   {
     var getResult = await grainFactory.GetGrain<IStoreGrain>(req.Id.ToString()).GetOrCreateAsync(ct);
     if (getResult.IsFailed)
     {
-      return Result<UpdateStoreResponse>.Fail(getResult);
+      return TypedResults.Problem(getResult);
     }
 
     var store = new StoreEntitySurrogate(
       Name: req.Body.Name);
 
     var result = await grainFactory.GetGrain<IStoreGrain>(req.Id.ToString()).SetAndWriteAsync(store, ct);
-    return result.ToResult(
-      book => new UpdateStoreResponse(
+    if (result.IsOk)
+    {
+      return TypedResults.Ok(new UpdateStoreResponse(
         Id: req.Id,
-        Name: book.Name));
+        Name: result.Value.Name));
+    }
+    return TypedResults.Problem(result);
   }
 }

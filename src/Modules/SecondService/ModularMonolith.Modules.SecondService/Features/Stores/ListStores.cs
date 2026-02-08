@@ -1,7 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
 using ModEndpoints;
 using ModEndpoints.Core;
-using ModResults;
 using ModularMonolith.Modules.SecondService.Data;
 using ModularMonolith.Modules.SecondService.FeatureContracts.Features.Stores;
 using ModularMonolith.Modules.SecondService.Features.Stores.Configuration;
@@ -10,7 +11,7 @@ namespace ModularMonolith.Modules.SecondService.Features.Stores;
 
 [MapToGroup<StoresRouteGroup>()]
 internal class ListStores(SecondServiceDbContext db)
-  : BusinessResultEndpointWithEmptyRequest<ListStoresResponse>
+  : MinimalEndpoint<Results<Ok<ListStoresResponse>, NotFound>>
 {
   private const string Pattern = "/";
 
@@ -21,7 +22,7 @@ internal class ListStores(SecondServiceDbContext db)
     builder.MapGet(Pattern);
   }
 
-  protected override async Task<Result<ListStoresResponse>> HandleAsync(
+  protected override async Task<Results<Ok<ListStoresResponse>, NotFound>> HandleAsync(
     CancellationToken ct)
   {
     var stores = await db.Stores
@@ -30,6 +31,10 @@ internal class ListStores(SecondServiceDbContext db)
         b.Name))
       .ToListAsync(ct);
 
-    return new ListStoresResponse(Stores: stores);
+    if (stores.Count == 0)
+    {
+      return TypedResults.NotFound();
+    }
+    return TypedResults.Ok(new ListStoresResponse(Stores: stores));
   }
 }

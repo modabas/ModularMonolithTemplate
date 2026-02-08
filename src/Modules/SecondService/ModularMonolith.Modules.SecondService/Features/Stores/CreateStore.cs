@@ -1,8 +1,9 @@
 ﻿using FluentValidation;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using ModEndpoints;
 using ModEndpoints.Core;
-using ModResults;
 using ModularMonolith.Modules.SecondService.Data;
 using ModularMonolith.Modules.SecondService.FeatureContracts.Features.Stores;
 using ModularMonolith.Modules.SecondService.Features.Stores.Configuration;
@@ -25,7 +26,7 @@ internal class CreateStoreRequestValidator : AbstractValidator<CreateStoreReques
 
 [MapToGroup<StoresRouteGroup>()]
 internal class CreateStore(SecondServiceDbContext db)
-  : BusinessResultEndpoint<CreateStoreRequest, CreateStoreResponse>
+  : MinimalEndpoint<CreateStoreRequest, Results<Created<CreateStoreResponse>, ValidationProblem>>
 {
   private const string Pattern = "/";
 
@@ -36,7 +37,7 @@ internal class CreateStore(SecondServiceDbContext db)
     builder.MapPost(Pattern);
   }
 
-  protected override async Task<Result<CreateStoreResponse>> HandleAsync(
+  protected override async Task<Results<Created<CreateStoreResponse>, ValidationProblem>> HandleAsync(
     CreateStoreRequest req,
     CancellationToken ct)
   {
@@ -48,7 +49,7 @@ internal class CreateStore(SecondServiceDbContext db)
     db.AddToOutbox(new StoreCreatedEvent(id, store.Name));
     await db.SaveChangesAsync(ct);
 
-    return new CreateStoreResponse(id);
+    return TypedResults.Created((string?)null, new CreateStoreResponse(id));
   }
 }
 
