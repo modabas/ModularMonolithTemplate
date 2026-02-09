@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using ModResults;
-using ModularMonolith.Modules.SecondService.Features.Stores;
+using ModularMonolith.Modules.SecondService.Extensions;
 
-namespace ModularMonolith.Modules.SecondService.Features.Stores;
+namespace ModularMonolith.Modules.SecondService.Extensions;
 
-public static class TypedResultsExtensions
+internal static class TypedResultsExtensions
 {
   extension(TypedResults)
   {

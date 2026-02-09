@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using ModEndpoints;
 using ModEndpoints.Core;
 using ModularMonolith.Modules.SecondService.Data;
 using ModularMonolith.Modules.SecondService.FeatureContracts.Features.Stores;

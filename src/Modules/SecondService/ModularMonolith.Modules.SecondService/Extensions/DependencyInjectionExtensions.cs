@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using ModEndpoints;
+using ModEndpoints.Core;
 using ModularMonolith.Modules.SecondService.Data;
 using ModularMonolith.Modules.SecondService.Features.Stores;
 using ModularMonolith.Shared.Data;
@@ -21,7 +21,7 @@ internal static class DependencyInjectionExtensions
     builder.AddDatabase();
     builder.Services.AddHostedService<PgDbMigrationService<SecondServiceDbContext>>();
     builder.AddSimpleOutbox<SecondServiceDbContext>();
-    builder.Services.AddModEndpointsFromAssemblyContaining<GetStoreById>();
+    builder.Services.AddModEndpointsCoreFromAssemblyContaining<GetStoreById>();
     builder.Services.AddValidatorsFromAssemblyContaining<GetStoreByIdRequestValidator>(includeInternalTypes: true);
 
     return builder;
