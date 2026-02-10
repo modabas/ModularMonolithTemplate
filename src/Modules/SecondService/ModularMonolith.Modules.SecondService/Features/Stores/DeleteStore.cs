@@ -37,6 +37,8 @@ internal class DeleteStore(IGrainFactory grainFactory)
     CancellationToken ct)
   {
     var result = await grainFactory.GetGrain<IStoreGrain>(req.Id.ToString()).RemoveAndDeleteAsync(ct);
-    return result.Map<Results<NoContent, ValidationProblem, ProblemHttpResult>>(_ => TypedResults.NoContent(), r => TypedResults.Problem(r));
+    return result.Map<Results<NoContent, ValidationProblem, ProblemHttpResult>>(
+      _ => TypedResults.NoContent(),
+      r => TypedResults.Problem(r));
   }
 }

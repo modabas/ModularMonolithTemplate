@@ -42,12 +42,6 @@ internal class UpdateBook(IGrainFactory grainFactory)
     UpdateBookRequest req,
     CancellationToken ct)
   {
-    var getResult = await grainFactory.GetGrain<IBookGrain>(req.Id.ToString()).GetOrCreateAsync(ct);
-    if (getResult.IsFailed)
-    {
-      return Result<UpdateBookResponse>.Fail(getResult);
-    }
-
     var book = new BookEntitySurrogate(
       Title: req.Body.Title,
       Author: req.Body.Author,
