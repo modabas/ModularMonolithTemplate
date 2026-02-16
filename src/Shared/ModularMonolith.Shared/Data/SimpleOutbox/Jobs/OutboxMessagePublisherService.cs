@@ -16,7 +16,7 @@ namespace ModularMonolith.Shared.Data.SimpleOutbox.Jobs;
 public class OutboxMessagePublisherService<TDbContext>(
    IServiceScopeFactory serviceScopeFactory,
    ILogger<OutboxMessagePublisherService<TDbContext>> logger,
-   IOptions<SimpleOutboxSettings> options) : BackgroundService
+   IOptions<SimpleOutboxOptions> options) : BackgroundService
     where TDbContext : DbContext, IOutboxDbContext
 {
   private static readonly ActivitySource _activitySource = new(SimpleOutboxDefinitions.OutboxPublisherActivitySourceName);
@@ -25,17 +25,16 @@ public class OutboxMessagePublisherService<TDbContext>(
   {
     var settings = options.Value;
     var fetchedMessageCount = int.MinValue;
-    settings.PublisherBatchCount = Math.Max(1, settings.PublisherBatchCount);
     using (var timer = new PeriodicTimer(settings.PublisherTimerPeriod))
     {
       while (fetchedMessageCount == settings.PublisherBatchCount ||
         await timer.WaitForNextTickAsync(cancellationToken))
       {
-        using (var pollActivity = _activitySource.StartActivity(
-          ActivityKind.Internal,
-          name: $"OutboxMessagePublisherService of {typeof(TDbContext)} Polling"))
+        try
         {
-          try
+          using (var pollActivity = _activitySource.StartActivity(
+            ActivityKind.Internal,
+            name: $"OutboxMessagePublisherService of {typeof(TDbContext)} Polling"))
           {
             using (var scope = serviceScopeFactory.CreateScope())
             {
@@ -47,12 +46,12 @@ public class OutboxMessagePublisherService<TDbContext>(
                 {
                   var utcNow = DateTimeOffset.UtcNow;
                   var messages = await dbContext.OutboxMessages
-                      .Where(x => x.State == MessageState.New && x.RetryCount <= settings.PublisherRetryCount && x.PublishAt <= utcNow ||
-                        x.State == MessageState.Errored && x.RetryCount <= settings.PublisherRetryCount && x.PublishAt <= utcNow)
-                      .OrderBy(x => x.Id)
-                      .WithQueryLock(QueryLockStrength.Update, QueryLockBehavior.SkipLocked)
-                      .Take(settings.PublisherBatchCount)
-                      .ToListAsync(cancellationToken);
+                    .Where(x => x.State == MessageState.New && x.RetryCount <= settings.PublisherRetryCount && x.PublishAt <= utcNow ||
+                      x.State == MessageState.Errored && x.RetryCount <= settings.PublisherRetryCount && x.PublishAt <= utcNow)
+                    .OrderBy(x => x.Id)
+                    .WithQueryLock(QueryLockStrength.Update, QueryLockBehavior.SkipLocked)
+                    .Take(settings.PublisherBatchCount)
+                    .ToListAsync(cancellationToken);
 
                   fetchedMessageCount = messages.Count;
 
@@ -74,17 +73,17 @@ public class OutboxMessagePublisherService<TDbContext>(
             }
             logger.LogDebug($"{nameof(OutboxMessagePublisherService<TDbContext>)} finished iteration");
           }
-          catch (Exception ex)
-          {
-            logger.LogError(ex, "Error outbox publish loop.");
-          }
+        }
+        catch (Exception ex)
+        {
+          logger.LogError(ex, "Error outbox publish loop.");
         }
       }
     }
   }
 
   private async Task PublishMessagesAsync(
-    SimpleOutboxSettings settings,
+    SimpleOutboxOptions settings,
     IServiceScope scope,
     TDbContext dbContext,
     List<Entities.OutboxMessageEntity> messages,

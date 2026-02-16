@@ -11,7 +11,7 @@ namespace ModularMonolith.Shared.Data.SimpleOutbox.Jobs;
 public class OutboxMessageRemovalService<TDbContext>(
    IServiceScopeFactory serviceScopeFactory,
    ILogger<OutboxMessagePublisherService<TDbContext>> logger,
-   IOptions<SimpleOutboxSettings> options) : BackgroundService
+   IOptions<SimpleOutboxOptions> options) : BackgroundService
     where TDbContext : DbContext, IOutboxDbContext
 {
   protected override async Task ExecuteAsync(CancellationToken cancellationToken)

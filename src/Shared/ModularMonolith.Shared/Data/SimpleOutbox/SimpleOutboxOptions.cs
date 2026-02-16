@@ -1,6 +1,6 @@
 ﻿namespace ModularMonolith.Shared.Data.SimpleOutbox;
 
-public class SimpleOutboxSettings
+public class SimpleOutboxOptions
 {
   public TimeSpan PublisherTimerPeriod { get; set; } = TimeSpan.FromSeconds(1);
   public int PublisherBatchCount { get; set; } = 10;
