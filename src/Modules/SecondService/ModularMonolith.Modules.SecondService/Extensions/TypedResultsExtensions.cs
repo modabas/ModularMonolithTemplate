@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using ModResults;
-using ModularMonolith.Modules.SecondService.Extensions;
 
 namespace ModularMonolith.Modules.SecondService.Extensions;
 
