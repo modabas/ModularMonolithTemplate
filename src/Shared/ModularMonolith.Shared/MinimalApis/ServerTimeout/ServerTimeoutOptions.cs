@@ -1,4 +1,6 @@
-﻿namespace ModularMonolith.Shared.MinimalApis.ServerTimeout;
+﻿using FluentValidation;
+
+namespace ModularMonolith.Shared.MinimalApis.ServerTimeout;
 
 public class ServerTimeoutOptions
 {
@@ -32,4 +34,3 @@ public class ServerTimeoutOptions
 public record ServerTimeoutOptionsEndpoint(
   string Type,
   TimeSpan Timeout);
-

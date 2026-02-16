@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using ModEndpoints.Core;
+using ModularMonolith.Shared.Data.SimpleOutbox;
+using ModularMonolith.Shared.Options.Validation;
 
 namespace ModularMonolith.Shared.MinimalApis.ServerTimeout;
 
@@ -10,7 +13,10 @@ public static class ServerTimeoutExtensions
 {
   public static IHostApplicationBuilder AddServerTimeout(this IHostApplicationBuilder builder)
   {
-    builder.Services.Configure<ServerTimeoutOptions>(builder.Configuration.GetSection("ServerTimeout"));
+    builder.Services.AddOptionsWithFluentValidation<ServerTimeoutOptions>()
+      .Bind(builder.Configuration.GetSection("ServerTimeout"));
+    builder.Services.AddScoped<IValidator<ServerTimeoutOptions>, ServerTimeoutOptionsValidator>();
+    builder.Services.AddScoped<IValidator<ServerTimeoutOptionsEndpoint>, ServerTimeoutOptionsEndpointValidator>();
     return builder;
   }
 
