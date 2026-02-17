@@ -1,7 +1,9 @@
 ﻿using Asp.Versioning;
+using FluentValidation;
 using MassTransit;
 using MassTransit.Logging;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
 using ModCaches.Orleans.Server.Cluster;
@@ -12,6 +14,7 @@ using ModularMonolith.Shared.Data;
 using ModularMonolith.Shared.Data.SimpleOutbox;
 using ModularMonolith.Shared.Masstransit;
 using ModularMonolith.Shared.MinimalApis.ServerTimeout;
+using ModularMonolith.Shared.Options.Validation;
 using Npgsql;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
@@ -134,8 +137,21 @@ public static class WebApplicationBuilderExtensions
 
   public static WebApplicationBuilder AddMassTransit(this WebApplicationBuilder builder)
   {
-    var options = builder.Configuration.GetSection("MtOptions").Get<MtOptions>();
-    options ??= new MtOptions();
+    var optionsSection = builder.Configuration.GetSection("MtOptions");
+    var options = optionsSection.Get<MtOptions>();
+    if (options is null)
+    {
+      // If configuration is missing, we still want to be able to start the application with default MassTransit settings
+      options = new MtOptions();
+    }
+    else
+    {
+      // If configuration is present, we want to validate it on startup
+      builder.Services.TryAddOptionsWithFluentValidationOnStart<MtOptions>()?
+        .Bind(optionsSection);
+      builder.Services.TryAddScoped<IValidator<MtOptions>, MtOptionsValidator>();
+      builder.Services.TryAddScoped<IValidator<MtOptionsRabbitMq>, MtOptionsRabbitMqValidator>();
+    }
     builder.Services.AddMassTransit(x =>
     {
       x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter(options.EndpointNamePrefix, true));
