@@ -7,10 +7,10 @@ namespace ModularMonolith.Shared.Options.Validation;
 public static class OptionsBuilderExtensions
 {
   public static OptionsBuilder<TOptions> ValidateWithFluentValidation<TOptions>(
-    this OptionsBuilder<TOptions> optionsBuilder) where TOptions : class
+    this OptionsBuilder<TOptions> optionsBuilder, string? defaultValidatorKey = null) where TOptions : class
   {
     optionsBuilder.Services.TryAddSingleton<IValidateOptions<TOptions>>(
-        provider => new FluentValidationOptionsValidator<TOptions>(provider));
+        provider => new FluentValidationOptionsValidator<TOptions>(provider, defaultValidatorKey));
     return optionsBuilder;
   }
 
