@@ -8,51 +8,33 @@ public sealed class FluentValidationOptionsValidator<TOptions>
     : IValidateOptions<TOptions> where TOptions : class
 {
   private readonly IServiceProvider _serviceProvider;
-  private readonly string? _name;
-  public FluentValidationOptionsValidator(string? name, IServiceProvider serviceProvider)
+  private readonly string _optionsTypeName = typeof(TOptions).Name;
+  public FluentValidationOptionsValidator(IServiceProvider serviceProvider)
   {
-    // we need the service provider to create a scope later
     _serviceProvider = serviceProvider;
-    _name = name; // Handle named options
   }
 
   public ValidateOptionsResult Validate(string? name, TOptions options)
   {
-    // Null name is used to configure all named options.
-    if (_name != null && _name != name)
-    {
-      // Ignored if not validating this instance.
-      return ValidateOptionsResult.Skip;
-    }
-
-    // Ensure options are provided to validate against
-    ArgumentNullException.ThrowIfNull(options);
-
-    // Validators are typically registered as scoped,
-    // so we need to create a scope to be safe, as this
-    // method is be called from the root scope
     using (var scope = _serviceProvider.CreateScope())
     {
-      // retrieve an instance of the validator
-      var validator = scope.ServiceProvider.GetRequiredService<IValidator<TOptions>>();
+      var validator = string.IsNullOrWhiteSpace(name)
+        ? scope.ServiceProvider.GetRequiredService<IValidator<TOptions>>()
+        : scope.ServiceProvider.GetKeyedService<IValidator<TOptions>>(name) ??
+          scope.ServiceProvider.GetRequiredService<IValidator<TOptions>>();
+      var validationResult = validator.Validate(options);
 
-      // Run the validation
-      var results = validator.Validate(options);
-      if (results.IsValid)
+      ValidateOptionsResultBuilder resultBuilder = new ValidateOptionsResultBuilder();
+      if (!validationResult.IsValid)
       {
-        // All good!
-        return ValidateOptionsResult.Success;
+        var propertyNamePrefix =
+          string.IsNullOrWhiteSpace(name) ? _optionsTypeName : $"{_optionsTypeName} (named '{name}')";
+        foreach (var error in validationResult.Errors)
+        {
+          resultBuilder.AddError(error.ErrorMessage, $"{propertyNamePrefix}.{error.PropertyName}");
+        }
       }
-
-      // Validation failed, so build the error message
-      var typeName = options.GetType().Name;
-      var errors = new List<string>();
-      foreach (var result in results.Errors)
-      {
-        errors.Add($"Fluent validation failed for '{typeName}.{result.PropertyName}' with the error: '{result.ErrorMessage}'.");
-      }
-
-      return ValidateOptionsResult.Fail(errors);
+      return resultBuilder.Build();
     }
   }
 }

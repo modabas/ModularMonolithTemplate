@@ -1,6 +1,4 @@
-﻿using FluentValidation;
-
-namespace ModularMonolith.Shared.MinimalApis.ServerTimeout;
+﻿namespace ModularMonolith.Shared.MinimalApis.ServerTimeout;
 
 public class ServerTimeoutOptions
 {
