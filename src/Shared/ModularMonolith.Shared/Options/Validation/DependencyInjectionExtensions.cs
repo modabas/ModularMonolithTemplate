@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 
 namespace ModularMonolith.Shared.Options.Validation;
 
-public static class OptionsBuilderExtensions
+public static class DependencyInjectionExtensions
 {
   public static OptionsBuilder<TOptions> ValidateWithFluentValidation<TOptions>(
     this OptionsBuilder<TOptions> optionsBuilder, string? defaultValidatorKey = null) where TOptions : class

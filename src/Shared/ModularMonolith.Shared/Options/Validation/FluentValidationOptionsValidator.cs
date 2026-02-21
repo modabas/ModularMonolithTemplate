@@ -22,10 +22,7 @@ public sealed class FluentValidationOptionsValidator<TOptions>
   {
     using (var scope = _serviceProvider.CreateScope())
     {
-      var validator = string.IsNullOrWhiteSpace(name)
-        ? scope.ServiceProvider.GetService<IValidator<TOptions>>()
-        : scope.ServiceProvider.GetKeyedService<IValidator<TOptions>>(name);
-      validator ??= GetDefaultValidator(scope);
+      var validator = GetValidator(scope, name);
       var validationResult = validator.Validate(options);
 
       ValidateOptionsResultBuilder resultBuilder = new ValidateOptionsResultBuilder();
@@ -41,11 +38,17 @@ public sealed class FluentValidationOptionsValidator<TOptions>
       return resultBuilder.Build();
     }
 
-    IValidator<TOptions> GetDefaultValidator(IServiceScope scope)
+    IValidator<TOptions> GetValidator(IServiceScope scope, string? name)
     {
-      return string.IsNullOrWhiteSpace(_defaultValidatorKey)
+      // Try to get a validator for the specific name.
+      var validator = string.IsNullOrWhiteSpace(name)
+        ? scope.ServiceProvider.GetService<IValidator<TOptions>>()
+        : scope.ServiceProvider.GetKeyedService<IValidator<TOptions>>(name);
+      // If a validator is not found for the specific name, fall back to the default validator.
+      validator ??= string.IsNullOrWhiteSpace(_defaultValidatorKey)
         ? scope.ServiceProvider.GetRequiredService<IValidator<TOptions>>()
         : scope.ServiceProvider.GetRequiredKeyedService<IValidator<TOptions>>(_defaultValidatorKey);
+      return validator;
     }
   }
 }
