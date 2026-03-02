@@ -16,14 +16,14 @@ internal class StoreGrain : VolatileCacheGrain<StoreEntitySurrogate>, IStoreGrai
   {
   }
 
-  protected override async Task<Result<CreateRecord<StoreEntitySurrogate>>> CreateFromStoreAsync(
-    CacheGrainEntryOptions options,
+  protected override async Task<Result<ClusterCacheEntry<StoreEntitySurrogate>>> CreateFromStoreAsync(
+    ClusterCacheEntryOptions options,
     CancellationToken ct)
   {
     var idResult = this.GetPrimaryKeyAsGuid();
     if (idResult.IsFailed)
     {
-      return Result<CreateRecord<StoreEntitySurrogate>>.Fail(idResult);
+      return Result<ClusterCacheEntry<StoreEntitySurrogate>>.Fail(idResult);
     }
     var id = idResult.Value;
     var db = RequestServices.GetRequiredService<SecondServiceDbContext>();
@@ -31,9 +31,9 @@ internal class StoreGrain : VolatileCacheGrain<StoreEntitySurrogate>, IStoreGrai
     var entity = await db.Stores.FirstOrDefaultAsync(b => b.Id == id, ct);
     if (entity is null)
     {
-      return Result<CreateRecord<StoreEntitySurrogate>>.NotFound($"Store with id: {id} not found.");
+      return Result<ClusterCacheEntry<StoreEntitySurrogate>>.NotFound($"Store with id: {id} not found.");
     }
-    return new CreateRecord<StoreEntitySurrogate>(entity.ToSurrogate(), options);
+    return ClusterCacheEntry.CreateResult(entity.ToSurrogate(), options);
   }
 
   protected override async Task<Result> DeleteFromStoreAsync(CancellationToken ct)
@@ -61,15 +61,15 @@ internal class StoreGrain : VolatileCacheGrain<StoreEntitySurrogate>, IStoreGrai
     return Result.Ok();
   }
 
-  protected override async Task<Result<WriteRecord<StoreEntitySurrogate>>> WriteToStoreAsync(
+  protected override async Task<Result<ClusterCacheEntry<StoreEntitySurrogate>>> WriteToStoreAsync(
     StoreEntitySurrogate value,
-    CacheGrainEntryOptions options,
+    ClusterCacheEntryOptions options,
     CancellationToken ct)
   {
     var idResult = this.GetPrimaryKeyAsGuid();
     if (idResult.IsFailed)
     {
-      return Result<WriteRecord<StoreEntitySurrogate>>.Fail(idResult);
+      return Result<ClusterCacheEntry<StoreEntitySurrogate>>.Fail(idResult);
     }
     var id = idResult.Value;
     var db = RequestServices.GetRequiredService<SecondServiceDbContext>();
@@ -83,8 +83,8 @@ internal class StoreGrain : VolatileCacheGrain<StoreEntitySurrogate>, IStoreGrai
     // If no rows were updated, the entity does not exist, return NotFound
     if (updated < 1)
     {
-      return Result<WriteRecord<StoreEntitySurrogate>>.NotFound($"Store with id: {id} not found.");
+      return Result<ClusterCacheEntry<StoreEntitySurrogate>>.NotFound($"Store with id: {id} not found.");
     }
-    return new WriteRecord<StoreEntitySurrogate>(value, options);
+    return ClusterCacheEntry.CreateResult(value, options);
   }
 }

@@ -16,14 +16,14 @@ internal class BookGrain : VolatileCacheGrain<BookEntitySurrogate>, IBookGrain
   {
   }
 
-  protected override async Task<Result<CreateRecord<BookEntitySurrogate>>> CreateFromStoreAsync(
-    CacheGrainEntryOptions options,
+  protected override async Task<Result<ClusterCacheEntry<BookEntitySurrogate>>> CreateFromStoreAsync(
+    ClusterCacheEntryOptions options,
     CancellationToken ct)
   {
     var idResult = this.GetPrimaryKeyAsGuid();
     if (idResult.IsFailed)
     {
-      return Result<CreateRecord<BookEntitySurrogate>>.Fail(idResult);
+      return Result<ClusterCacheEntry<BookEntitySurrogate>>.Fail(idResult);
     }
     var id = idResult.Value;
     var db = RequestServices.GetRequiredService<FirstServiceDbContext>();
@@ -31,9 +31,9 @@ internal class BookGrain : VolatileCacheGrain<BookEntitySurrogate>, IBookGrain
     var entity = await db.Books.FirstOrDefaultAsync(b => b.Id == id, ct);
     if (entity is null)
     {
-      return Result<CreateRecord<BookEntitySurrogate>>.NotFound($"Book with id: {id} not found.");
+      return Result<ClusterCacheEntry<BookEntitySurrogate>>.NotFound($"Book with id: {id} not found.");
     }
-    return new CreateRecord<BookEntitySurrogate>(entity.ToSurrogate(), options);
+    return ClusterCacheEntry.CreateResult(entity.ToSurrogate(), options);
   }
 
   protected override async Task<Result> DeleteFromStoreAsync(CancellationToken ct)
@@ -61,15 +61,15 @@ internal class BookGrain : VolatileCacheGrain<BookEntitySurrogate>, IBookGrain
     return Result.Ok();
   }
 
-  protected override async Task<Result<WriteRecord<BookEntitySurrogate>>> WriteToStoreAsync(
+  protected override async Task<Result<ClusterCacheEntry<BookEntitySurrogate>>> WriteToStoreAsync(
     BookEntitySurrogate value,
-    CacheGrainEntryOptions options,
+    ClusterCacheEntryOptions options,
     CancellationToken ct)
   {
     var idResult = this.GetPrimaryKeyAsGuid();
     if (idResult.IsFailed)
     {
-      return Result<WriteRecord<BookEntitySurrogate>>.Fail(idResult);
+      return Result<ClusterCacheEntry<BookEntitySurrogate>>.Fail(idResult);
     }
     var id = idResult.Value;
     var db = RequestServices.GetRequiredService<FirstServiceDbContext>();
@@ -85,8 +85,8 @@ internal class BookGrain : VolatileCacheGrain<BookEntitySurrogate>, IBookGrain
     // If no rows were updated, the entity does not exist, return NotFound
     if (updated < 1)
     {
-      return Result<WriteRecord<BookEntitySurrogate>>.NotFound($"Book with id: {id} not found.");
+      return Result<ClusterCacheEntry<BookEntitySurrogate>>.NotFound($"Book with id: {id} not found.");
     }
-    return new WriteRecord<BookEntitySurrogate>(value, options);
+    return ClusterCacheEntry.CreateResult(value, options);
   }
 }

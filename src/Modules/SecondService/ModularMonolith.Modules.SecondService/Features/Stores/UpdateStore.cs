@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using ModEndpoints.Core;
-using ModularMonolith.Modules.SecondService.Extensions;
+using ModResults.MinimalApis;
 using ModularMonolith.Modules.SecondService.FeatureContracts.Features.Stores;
 using ModularMonolith.Modules.SecondService.Features.Stores.Configuration;
 using ModularMonolith.Modules.SecondService.Features.Stores.Orleans;
