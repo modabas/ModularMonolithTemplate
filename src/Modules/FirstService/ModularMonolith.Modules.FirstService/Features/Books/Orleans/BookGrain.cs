@@ -23,7 +23,7 @@ internal class BookGrain : VolatileCacheGrain<BookEntitySurrogate>, IBookGrain
     var idResult = this.GetPrimaryKeyAsGuid();
     if (idResult.IsFailed)
     {
-      return Result<ClusterCacheEntry<BookEntitySurrogate>>.Fail(idResult);
+      return FailureResult.From(idResult);
     }
     var id = idResult.Value;
     var db = RequestServices.GetRequiredService<FirstServiceDbContext>();
@@ -69,7 +69,7 @@ internal class BookGrain : VolatileCacheGrain<BookEntitySurrogate>, IBookGrain
     var idResult = this.GetPrimaryKeyAsGuid();
     if (idResult.IsFailed)
     {
-      return Result<ClusterCacheEntry<BookEntitySurrogate>>.Fail(idResult);
+      return FailureResult.From(idResult);
     }
     var id = idResult.Value;
     var db = RequestServices.GetRequiredService<FirstServiceDbContext>();

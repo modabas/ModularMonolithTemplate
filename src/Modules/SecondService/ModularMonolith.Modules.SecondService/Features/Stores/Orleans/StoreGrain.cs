@@ -23,7 +23,7 @@ internal class StoreGrain : VolatileCacheGrain<StoreEntitySurrogate>, IStoreGrai
     var idResult = this.GetPrimaryKeyAsGuid();
     if (idResult.IsFailed)
     {
-      return Result<ClusterCacheEntry<StoreEntitySurrogate>>.Fail(idResult);
+      return FailureResult.From(idResult);
     }
     var id = idResult.Value;
     var db = RequestServices.GetRequiredService<SecondServiceDbContext>();
@@ -69,7 +69,7 @@ internal class StoreGrain : VolatileCacheGrain<StoreEntitySurrogate>, IStoreGrai
     var idResult = this.GetPrimaryKeyAsGuid();
     if (idResult.IsFailed)
     {
-      return Result<ClusterCacheEntry<StoreEntitySurrogate>>.Fail(idResult);
+      return FailureResult.From(idResult);
     }
     var id = idResult.Value;
     var db = RequestServices.GetRequiredService<SecondServiceDbContext>();

@@ -48,7 +48,7 @@ internal class UpdateBook(IGrainFactory grainFactory)
       Price: req.Body.Price);
 
     var result = await grainFactory.GetGrain<IBookGrain>(req.Id.ToString()).SetAndWriteAsync(book, ct);
-    return result.ToResult(
+    return result.AsResult(
       book => new UpdateBookResponse(
         Id: req.Id,
         Title: book.Title,

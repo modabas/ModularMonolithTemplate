@@ -17,8 +17,8 @@
   <ItemGroup>
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <PackageReference Include="Microsoft.Orleans.Sdk" Version="10.0.1" />
-    <PackageReference Include="ModCaches.Orleans.Server" Version="1.4.0" />
-    <PackageReference Include="ModEndpoints.Core" Version="2.0.4" />
-    <PackageReference Include="ModResults.MinimalApis" Version="1.3.0" />
+    <PackageReference Include="ModCaches.Orleans.Server" Version="1.4.2" />
+    <PackageReference Include="ModEndpoints.Core" Version="2.0.6" />
+    <PackageReference Include="ModResults.MinimalApis" Version="1.3.2" />
   </ItemGroup>
 </Project>
